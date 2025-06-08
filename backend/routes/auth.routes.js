@@ -34,4 +34,8 @@ router.post('/login', (req, res) => {
   });
 });
 
+router.get('/test', (req, res) => {
+  res.send('Ruta de prueba activa.');
+});
+
 module.exports = router;

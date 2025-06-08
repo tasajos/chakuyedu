@@ -16,20 +16,38 @@ class Login extends Component {
   handleChange = (e) => {
     this.setState({ [e.target.name]: e.target.value });
   }
+handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post('http://localhost:5000/api/auth/login', {
+      correo: this.state.correo,
+      contrasena: this.state.contrasena
+    });
 
-  handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        correo: this.state.correo,
-        contrasena: this.state.contrasena
-      });
+    const usuario = res.data.usuario;
 
-      this.setState({ usuario: res.data.usuario, mensaje: res.data.mensaje });
-    } catch (error) {
-      this.setState({ mensaje: 'Error: Credenciales incorrectas' });
+    // 1. Guardar en localStorage
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+
+    // 2. Redirigir según el rol
+    switch (usuario.rol) {
+      case 'admin':
+        window.location.href = '/admin';
+        break;
+      case 'docente':
+        window.location.href = '/docente';
+        break;
+      case 'estudiante':
+        window.location.href = '/estudiante';
+        break;
+      default:
+        this.setState({ mensaje: 'Rol desconocido' });
     }
+  } catch (error) {
+    this.setState({ mensaje: 'Error: Credenciales incorrectas' });
   }
+}
+
 
   render() {
     return (
