@@ -5,6 +5,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
+  port: 3307, // <-- nuevo puerto
   database: 'educa_db'
 });
 
