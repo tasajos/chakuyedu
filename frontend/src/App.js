@@ -4,6 +4,8 @@ import Login from './Components/Login';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Logout from './Components/Logout';
 import ProtectedRoute from './Components/ProtectedRoute';
+import AdminDashboard from './Components/Admin/AdminDashboard';
+import Navbar from './Components/Navbar';
 import axios from 'axios';
 
 
@@ -38,7 +40,16 @@ function App() {
     <Router>
       <Routes>
         <Route path="/"           element={<Login />} />
-        <Route path="/admin"      element={<Admin />} />
+
+
+        <Route path="/admin"      element={
+        <ProtectedRoute rolPermitido="admin">
+           <Navbar />
+            <AdminDashboard />
+            {/*<Logout />*/}
+          </ProtectedRoute>
+        }/>
+             
         <Route path="/docente"    element={<Docente />} />
         
         

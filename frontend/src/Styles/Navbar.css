@@ -1,0 +1,26 @@
+.navbar {
+  background-color: #007bff; /* Azul primario */
+}
+
+.navbar-logo {
+  height: 40px;
+}
+
+.navbar-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.logout-btn {
+  background-color: #5bc0de;  /* Celeste */
+  border-color: #46b8da;
+  color: #fff;
+  font-weight: 500;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #31b0d5;
+  border-color: #269abc;
+}
