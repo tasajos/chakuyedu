@@ -1,3 +1,4 @@
+// backend/routes/reportes.routes.js
 const express    = require('express');
 const router     = express.Router();
 const connection = require('../config/db');
