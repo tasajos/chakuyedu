@@ -29,4 +29,18 @@ router.post('/crear', (req, res) => {
   });
 });
 
+// GET /api/usuarios
+router.get('/', (req, res) => {
+  connection.query(
+    `SELECT nombre, apellido_paterno, apellido_materno,
+       telefono, carnet_identidad AS ci, rol, fecha_nacimiento
+FROM usuarios;`,
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    }
+  );
+});
+
+
 module.exports = router;

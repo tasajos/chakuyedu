@@ -1,0 +1,31 @@
+/* frontend/src/Styles/Admin/ListarUsuarios.css */
+
+/* Layout para que la tabla quede bajo la navbar y junto a la sidebar */
+.dashboard-layout {
+  display: flex;
+}
+
+.main-content {
+  margin-left: 200px;      /* ancho de la sidebar */
+  margin-top: 56px;        /* altura de la navbar */
+  width: calc(100% - 200px);
+  min-height: calc(100vh - 56px);
+}
+
+/* Contenedor específico del listado */
+.listar-usuarios-container {
+  padding: 2rem;
+  background-color: #f8f9fa;
+}
+
+.listar-usuarios-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+/* Altura fija con scroll para la tabla */
+.table-responsive {
+  max-height: 60vh;
+  overflow-y: auto;
+}

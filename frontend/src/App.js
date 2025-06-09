@@ -13,6 +13,7 @@ import CrearMateria from './Components/Admin/GestionAcademica/CrearMateria';
 import SidebarMenu from './Components/SidebarMenu';
 import GestionUsuarios from './Components/Admin/GestionUsuarios/GestionUsuarios';
 import CrearUsuario from './Components/Admin/GestionUsuarios/CrearUsuarios';
+import ListarUsuarios from './Components/Admin/GestionUsuarios/ListarUsuarios';
 import axios from 'axios';
 
 
@@ -89,6 +90,14 @@ function App() {
         <SidebarMenu />
         <Navbar />
         <CrearUsuario />
+        </ProtectedRoute>
+        }/>
+
+        <Route path="/admin/GestionUsuarios/ListarUsuarios" element={
+        <ProtectedRoute rolPermitido="admin">
+        <SidebarMenu />
+        <Navbar />
+        <ListarUsuarios />
         </ProtectedRoute>
         }/>
 

@@ -49,7 +49,7 @@ class GestionUsuarios extends Component {
                   <List size={48} className="text-success" />,
                   'Listar Usuarios',
                   'Ver, editar y eliminar usuarios existentes.',
-                  '/admin/usuarios/listar'
+                  '/admin/GestionUsuarios/ListarUsuarios'
                 )}
                 {this.renderCard(
                   <BarChart2 size={48} className="text-warning" />,
