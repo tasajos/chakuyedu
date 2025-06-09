@@ -10,7 +10,7 @@ class ListarUsuarios extends Component {
 
   async componentDidMount() {
     try {
-      const res = await axios.get('http://localhost:5000/api/usuarios');
+      const res = await axios.get('http://localhost:5002/api/usuarios');
       this.setState({ usuarios: res.data });
     } catch (err) {
       console.error(err);
@@ -29,6 +29,7 @@ class ListarUsuarios extends Component {
       u.apellido_paterno.toLowerCase().includes(texto) ||
       u.apellido_materno.toLowerCase().includes(texto) ||
       u.ci.toLowerCase().includes(texto) ||
+      u.correo.toLowerCase().includes(texto) ||
       u.rol.toLowerCase().includes(texto)
     );
 
@@ -60,6 +61,7 @@ class ListarUsuarios extends Component {
                       <th>Apellido Materno</th>
                       <th>Teléfono</th>
                       <th>CI</th>
+                      <th>Correo</th>
                       <th>Rol</th>
                       <th>Fecha de Nacimiento</th>
                     </tr>
@@ -71,6 +73,7 @@ class ListarUsuarios extends Component {
                         <td>{u.apellido_paterno}</td>
                         <td>{u.apellido_materno}</td>
                         <td>{u.telefono}</td>
+                        <td>{u.correo}</td>
                         <td>{u.ci}</td>
                         <td>{u.rol}</td>
                         <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>

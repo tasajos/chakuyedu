@@ -19,7 +19,7 @@ class Login extends Component {
 handleSubmit = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post('http://localhost:5000/api/auth/login', {
+    const res = await axios.post('http://localhost:5002/api/auth/login', {
       correo: this.state.correo,
       contrasena: this.state.contrasena
     });

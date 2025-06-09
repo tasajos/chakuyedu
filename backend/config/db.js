@@ -9,9 +9,12 @@ const connection = mysql.createConnection({
   database: 'educa_db'
 });
 
-connection.connect((err) => {
-  if (err) throw err;
-  console.log('Conectado a MySQL ✅');
+connection.connect(err => {
+  if (err) {
+    console.error('❌ Error conectando a MySQL:', err.message);
+  } else {
+    console.log('Conectado a MySQL ✅');
+  }
 });
 
 module.exports = connection;
