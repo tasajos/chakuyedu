@@ -54,7 +54,7 @@ class AdminDashboard extends Component {
             <BookOpen size={48} className="text-info"/>,
             'Gestión Académica',
             'Crear materias y asignar planificaciones.',
-            '/admin/academica'
+            '/admin/GestionAcademica/GestionAcademica'
           )}
           {this.renderCard(
             <BarChart2 size={48} className="text-danger"/>,

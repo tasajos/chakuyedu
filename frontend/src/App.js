@@ -6,6 +6,9 @@ import Logout from './Components/Logout';
 import ProtectedRoute from './Components/ProtectedRoute';
 import AdminDashboard from './Components/Admin/AdminDashboard';
 import Navbar from './Components/Navbar';
+import DocenteDashboard from './Components/Docente/DocenteDashboard';
+import EstudianteDashboard from './Components/Estudiante/EstudianteDashboard';
+import GestionAcademica from './Components/Admin/GestionAcademica/GestionAcademica';
 import axios from 'axios';
 
 
@@ -49,17 +52,32 @@ function App() {
             {/*<Logout />*/}
           </ProtectedRoute>
         }/>
+
+         <Route path="/admin/GestionAcademica/GestionAcademica" element={
+          <ProtectedRoute rolPermitido="admin">
+             <Navbar />
+            <GestionAcademica />
+          </ProtectedRoute>
+        }/>
              
-        <Route path="/docente"    element={<Docente />} />
+        <Route path="/docente"    element={
+          
+         <ProtectedRoute rolPermitido="docente">
+           <Navbar />
+            <DocenteDashboard  />
+            {/*<Logout />*/}
+          </ProtectedRoute>
+        }/>
         
         
 
         <Route path="/estudiante" element={
           <ProtectedRoute rolPermitido="estudiante">
-          
-          <Estudiante/>
+           <Navbar />
+            <EstudianteDashboard  />
+            {/*<Logout />*/}
           </ProtectedRoute>
-          }/>
+        }/>
       </Routes>
     </Router>
   );
