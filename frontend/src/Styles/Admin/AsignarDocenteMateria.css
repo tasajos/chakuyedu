@@ -1,0 +1,15 @@
+/*
+CSS en 'AsignarDocenteMateria.css':*/
+
+.asignar-docente-container {
+  margin-top: 56px;
+  margin-left: 200px;
+  padding: 2rem;
+  background: #f8f9fa;
+}
+.asignar-docente-container .card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  background: #fff;
+}
+

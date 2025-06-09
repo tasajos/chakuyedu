@@ -50,7 +50,7 @@ class GestionAcademica extends Component {
               <UserCheck size={48} className="text-warning" />,
               'Asignar Docente–Materia',
               'Vincular docentes a las materias.',
-              '/admin/academica/asignar-docente'
+              '/admin/GestionAcademica/AsignarDocenteMateria'
             )}
           </div>
         </div>
