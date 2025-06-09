@@ -8,7 +8,7 @@ const menuConfig = {
   admin: [
     { icon: Settings, label: 'Mantenimiento', to: '/admin/mantenimiento' },
     { icon: Users,    label: 'Gestión Usuarios',    to: '/admin/GestionUsuarios/GestionUsuarios'    },
-    { icon: UserCheck,label: 'Gestión Docente',     to: '/admin/docentes'    },
+    { icon: UserCheck,label: 'Gestión Docente',     to: '/admin/GestionDocente/GestionDocente'    },
     { icon: BookOpen, label: 'Gestión Académica',   to: '/admin/GestionAcademica/GestionAcademica'   },
     { icon: BarChart2,label: 'Informes',            to: '/admin/informes'    },
   ],

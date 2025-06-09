@@ -51,7 +51,7 @@ class AdminDashboard extends Component {
             <UserCheck size={48} className="text-warning"/>,
             'Gestión Docente',
             'Administrar perfiles y asignaciones de docentes.',
-            '/admin/docentes'
+            '/admin/GestionDocente/GestionDocente'
           )}
           {this.renderCard(
             <BookOpen size={48} className="text-info"/>,
