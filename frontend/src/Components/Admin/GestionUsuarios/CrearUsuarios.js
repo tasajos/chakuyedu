@@ -30,7 +30,7 @@ class CrearUsuario extends Component {
     e.preventDefault();
     const { contrasena = this.state.carnet_identidad, mensaje, ...data } = this.state;
     try {
-      const res = await axios.post('http://localhost:5000/api/usuarios/crear', { ...data, contrasena });
+      const res = await axios.post('http://localhost:5002/api/usuarios/crear', { ...data, contrasena });
       this.setState({
         nombre: '',
         apellido_paterno: '',

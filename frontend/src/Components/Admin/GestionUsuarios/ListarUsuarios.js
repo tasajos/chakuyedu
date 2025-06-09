@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+
+
 import '../../../Styles/Admin/ListarUsuarios.css';
 
 class ListarUsuarios extends Component {
@@ -13,7 +15,7 @@ class ListarUsuarios extends Component {
       const res = await axios.get('http://localhost:5002/api/usuarios');
       this.setState({ usuarios: res.data });
     } catch (err) {
-      console.error(err);
+      console.error('Error al obtener usuarios:', err);
     }
   }
 
@@ -24,20 +26,24 @@ class ListarUsuarios extends Component {
   render() {
     const { usuarios, filtro } = this.state;
     const texto = filtro.toLowerCase();
+    const safe = (v) => (v || '').toString().toLowerCase();
+
     const filtrados = usuarios.filter(u =>
-      u.nombre.toLowerCase().includes(texto) ||
-      u.apellido_paterno.toLowerCase().includes(texto) ||
-      u.apellido_materno.toLowerCase().includes(texto) ||
-      u.ci.toLowerCase().includes(texto) ||
-      u.correo.toLowerCase().includes(texto) ||
-      u.rol.toLowerCase().includes(texto)
+      safe(u.nombre).includes(texto) ||
+      safe(u.apellido_paterno).includes(texto) ||
+      safe(u.apellido_materno).includes(texto) ||
+      safe(u.telefono).includes(texto) ||
+      safe(u.ci).includes(texto) ||
+      safe(u.correo).includes(texto) ||
+      safe(u.rol).includes(texto)
     );
 
     return (
       <>
-       
+        
         <div className="dashboard-layout">
-         
+        
+
           <main className="main-content listar-usuarios-container">
             <div className="card listar-usuarios-card p-4">
               <h3 className="mb-4">Listado de Usuarios</h3>
@@ -45,7 +51,7 @@ class ListarUsuarios extends Component {
               <div className="mb-3">
                 <input
                   type="text"
-                  placeholder="Filtrar por nombre, apellidos, CI o rol..."
+                  placeholder="Filtrar por nombre, apellidos, CI, correo o rol..."
                   className="form-control"
                   value={filtro}
                   onChange={this.handleFiltroChange}
@@ -73,15 +79,15 @@ class ListarUsuarios extends Component {
                         <td>{u.apellido_paterno}</td>
                         <td>{u.apellido_materno}</td>
                         <td>{u.telefono}</td>
-                        <td>{u.correo}</td>
                         <td>{u.ci}</td>
+                        <td>{u.correo}</td>
                         <td>{u.rol}</td>
                         <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
                       </tr>
                     ))}
                     {filtrados.length === 0 && (
                       <tr>
-                        <td colSpan="7" className="text-center">No hay usuarios que coincidan.</td>
+                        <td colSpan="8" className="text-center">No hay usuarios que coincidan.</td>
                       </tr>
                     )}
                   </tbody>
