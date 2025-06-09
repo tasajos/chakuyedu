@@ -20,7 +20,7 @@ class CrearMateria extends Component {
     const { nombre, codigo, facultad, jefe_carrera } = this.state;
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/materias/crear',
+        'http://localhost:5002/api/materias/crear',
         { nombre, codigo, facultad, jefe_carrera }
       );
       this.setState({

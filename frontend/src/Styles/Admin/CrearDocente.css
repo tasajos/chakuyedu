@@ -1,0 +1,21 @@
+.crear-docente-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+}
+
+.crear-docente-card {
+  width: 100%;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  background: #ffffff;
+}
+.form-control, .form-select {
+  border-radius: 8px;
+}
+.btn-primary {
+  border-radius: 8px;
+  font-weight: 600;
+}

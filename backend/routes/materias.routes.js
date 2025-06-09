@@ -21,4 +21,22 @@ router.post('/crear', (req, res) => {
   );
 });
 
+// GET /api/materias
+router.get('/', (req, res) => {
+  const sql = `
+    SELECT
+      id,
+      nombre,
+      codigo,
+      facultad,
+      jefe_carrera
+    FROM materias
+    ORDER BY nombre
+  `;
+  connection.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
 module.exports = router;

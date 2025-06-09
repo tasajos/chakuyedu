@@ -40,13 +40,13 @@ class GestionDocente extends Component {
                   <UserCheck size={48} className="text-primary" />,
                   'Crear Docente',
                   'Registrar nuevos profesores en el sistema.',
-                  '/admin/docentes/crear'
+                  '/admin/GestionDocente/CrearDocente'
                 )}
                 {this.renderCard(
                   <Users size={48} className="text-success" />,
                   'Listar Docentes',
                   'Ver, editar y eliminar profesores existentes.',
-                  '/admin/docentes/listar'
+                  '/admin/GestionDocente/ListarDocentes'
                 )}
                 {this.renderCard(
                   <BarChart2 size={48} className="text-warning" />,

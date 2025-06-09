@@ -22,10 +22,12 @@ app.get('/', (req, res) => {
 const authRoutes     = require('./routes/auth.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const materiasRoutes = require('./routes/materias.routes');
+const inscripcionesRoutes = require('./routes/inscripciones.routes');
 
 app.use('/api/auth',     authRoutes);
 app.use('/api/usuarios',  usuariosRoutes);
 app.use('/api/materias',  materiasRoutes);
+app.use('/api/inscripciones', inscripcionesRoutes);
 
 // 4) Inicia el servidor
 const PORT = process.env.PORT || 5002;

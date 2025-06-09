@@ -1,0 +1,15 @@
+/*
+Crear CSS en 'AsignarEstudiantes.css':*/
+
+.asignar-estudiantes-container {
+  margin-top: 56px; /* debajo de navbar */
+  margin-left: 200px; /* junto a sidebar */
+  padding: 2rem;
+  background: #f8f9fa;
+}
+
+.asignar-estudiantes-container .card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  background: #fff;
+}

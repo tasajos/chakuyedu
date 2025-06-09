@@ -44,7 +44,7 @@ class GestionAcademica extends Component {
               <UserPlus size={48} className="text-success" />,
               'Asignar Estudiantes',
               'Inscribir estudiantes en materias.',
-              '/admin/academica/asignar-estudiantes'
+              '/admin/GestionAcademica/AsignarEstudiantes'
             )}
             {this.renderCard(
               <UserCheck size={48} className="text-warning" />,
