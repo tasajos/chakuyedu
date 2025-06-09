@@ -10,6 +10,8 @@ import DocenteDashboard from './Components/Docente/DocenteDashboard';
 import EstudianteDashboard from './Components/Estudiante/EstudianteDashboard';
 import GestionAcademica from './Components/Admin/GestionAcademica/GestionAcademica';
 import CrearMateria from './Components/Admin/GestionAcademica/CrearMateria';
+import SidebarMenu from './Components/SidebarMenu';
+import GestionUsuarios from './Components/Admin/GestionUsuarios/GestionUsuarios';
 import axios from 'axios';
 
 
@@ -49,6 +51,7 @@ function App() {
         <Route path="/admin"      element={
         <ProtectedRoute rolPermitido="admin">
            <Navbar />
+           <SidebarMenu />
             <AdminDashboard />
             {/*<Logout />*/}
           </ProtectedRoute>
@@ -56,6 +59,7 @@ function App() {
 
          <Route path="/admin/GestionAcademica/GestionAcademica" element={
           <ProtectedRoute rolPermitido="admin">
+            <SidebarMenu />
              <Navbar />
             <GestionAcademica />
           </ProtectedRoute>
@@ -64,11 +68,25 @@ function App() {
 
         <Route path="/admin/academica/crear-materias" element={
         <ProtectedRoute rolPermitido="admin">
+          <SidebarMenu />
           <Navbar />
         <CrearMateria />
         </ProtectedRoute>
         }/>
+
+      <Route path="/admin/GestionUsuarios/GestionUsuarios" element={
+        <ProtectedRoute rolPermitido="admin">
+          <SidebarMenu />
+          <Navbar />
+        <GestionUsuarios />
+        </ProtectedRoute>
+        }/>
+
+
+             {/*DOCENTES
              
+             
+             */}
         <Route path="/docente"    element={
           
          <ProtectedRoute rolPermitido="docente">

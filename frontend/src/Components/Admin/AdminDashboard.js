@@ -3,6 +3,7 @@ import { Settings, Users, UserCheck, BookOpen, BarChart2 } from 'lucide-react';
 import '../../Styles/Admin/AdminDashboard.css';
 import NavBar from '../Navbar';
 import '../../Styles/Navbar.css';
+import SidebarMenu from '../SidebarMenu';
 
 class AdminDashboard extends Component {
   handleClick = (ruta) => {
@@ -28,8 +29,10 @@ class AdminDashboard extends Component {
 
   render() {
     return (
-      <div className="container mt-5">
  
+      <div className="container mt-5">
+ <div>
+        
         <h2 className="mb-4">Panel de Administración</h2>
         <div className="row g-4">
           {this.renderCard(
@@ -42,7 +45,7 @@ class AdminDashboard extends Component {
             <Users size={48} className="text-success"/>,
             'Gestión Usuarios',
             'Crear, editar y eliminar cuentas de usuario.',
-            '/admin/usuarios'
+            '/admin/GestionUsuarios/GestionUsuarios'
           )}
           {this.renderCard(
             <UserCheck size={48} className="text-warning"/>,
@@ -64,6 +67,9 @@ class AdminDashboard extends Component {
           )}
         </div>
       </div>
+   
+        </div>
+   
     );
   }
 }
