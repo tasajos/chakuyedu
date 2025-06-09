@@ -52,7 +52,7 @@ class GestionDocente extends Component {
                   <BarChart2 size={48} className="text-warning" />,
                   'Reporte Docentes',
                   'Generar reportes de actividad y desempeño.',
-                  '/admin/docentes/reporte'
+                  '/admin/GestionDocente/ReporteDocentes'
                 )}
               </div>
             </div>

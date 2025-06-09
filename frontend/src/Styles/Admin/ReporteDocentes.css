@@ -1,0 +1,24 @@
+/*
+CSS: frontend/src/Styles/Admin/ReporteDocentes.css*/
+
+.reporte-docentes-container {
+  margin-top: 56px;   /* espacio bajo navbar */
+  margin-left: 200px; /* junto a sidebar */
+  padding: 2rem;
+  background: #f0f2f5;
+}
+
+.reporte-docentes-container .card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.reporte-docentes-container table th,
+.reporte-docentes-container table td {
+  vertical-align: middle;
+}
+
+.reporte-docentes-container table thead th {
+  background-color: #343a40;
+  color: #fff;
+}

@@ -19,6 +19,7 @@ import CrearDocente from './Components/Admin/GestionDocente/CrearDocente';
 import ListarDocentes from './Components/Admin/GestionDocente/ListarDocentes';
 import AsignarEstudiantes from './Components/Admin/GestionAcademica/AsignarEstudiantes';
 import AsignarDocenteMateria from './Components/Admin/GestionAcademica/AsignarDocenteMateria';
+import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDocentes';
 import axios from 'axios';
 
 
@@ -145,6 +146,14 @@ function App() {
         <SidebarMenu />
         <Navbar />
         <AsignarDocenteMateria />
+        </ProtectedRoute>
+        }/>
+
+         <Route path="/admin/GestionDocente/ReporteDocentes" element={
+        <ProtectedRoute rolPermitido="admin">
+        <SidebarMenu />
+        <Navbar />
+        <ReporteDocenteMateria />
         </ProtectedRoute>
         }/>
 
