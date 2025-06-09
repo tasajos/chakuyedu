@@ -9,6 +9,7 @@ import Navbar from './Components/Navbar';
 import DocenteDashboard from './Components/Docente/DocenteDashboard';
 import EstudianteDashboard from './Components/Estudiante/EstudianteDashboard';
 import GestionAcademica from './Components/Admin/GestionAcademica/GestionAcademica';
+import CrearMateria from './Components/Admin/GestionAcademica/CrearMateria';
 import axios from 'axios';
 
 
@@ -58,6 +59,14 @@ function App() {
              <Navbar />
             <GestionAcademica />
           </ProtectedRoute>
+        }/>
+
+
+        <Route path="/admin/academica/crear-materias" element={
+        <ProtectedRoute rolPermitido="admin">
+          <Navbar />
+        <CrearMateria />
+        </ProtectedRoute>
         }/>
              
         <Route path="/docente"    element={

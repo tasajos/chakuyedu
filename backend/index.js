@@ -19,3 +19,8 @@ app.use('/api/auth', authRoutes);
 // Iniciar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor backend en puerto ${PORT}`));
+
+//Crear Materia API
+
+const materiasRoutes = require('./routes/materias.routes');
+app.use('/api/materias', materiasRoutes);

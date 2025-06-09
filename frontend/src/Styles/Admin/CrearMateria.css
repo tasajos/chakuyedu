@@ -1,0 +1,28 @@
+.crear-materia-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f0f2f5;
+}
+
+.crear-materia-card {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+.crear-materia-card h3 {
+  color: #333;
+}
+
+.form-control {
+  border-radius: 8px;
+}
+
+.btn-success {
+  border-radius: 8px;
+  font-weight: 600;
+}
