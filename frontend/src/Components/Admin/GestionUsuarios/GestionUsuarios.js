@@ -43,7 +43,7 @@ class GestionUsuarios extends Component {
                   <UserPlus size={48} className="text-primary" />,
                   'Crear Usuario',
                   'Alta de nuevos usuarios al sistema.',
-                  '/admin/usuarios/crear'
+                  '/admin/GestionUsuarios/CrearUsuarios'
                 )}
                 {this.renderCard(
                   <List size={48} className="text-success" />,

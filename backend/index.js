@@ -7,6 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Rutas usuarios
+const usuariosRoutes = require('./routes/usuarios.routes');
+app.use('/api/usuarios', usuariosRoutes);
+
 // Rutas base
 app.get('/', (req, res) => {
   res.send('API Educativa corriendo...');
