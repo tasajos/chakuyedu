@@ -1,98 +1,89 @@
+// frontend/src/Components/Admin/GestionDocente/ListarDocentes.js
 import React, { Component } from 'react';
-import axios from 'axios';
-import { Eye, Edit2 } from 'lucide-react';
+import { collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../../../firebase';
+import { Eye } from 'lucide-react';
+
 import '../../../Styles/Admin/ListarUsuarios.css';
 
 class ListarDocentes extends Component {
   state = {
-    usuarios: [],
+    docentes: [],
     filtro: '',
-    viewUser: null,
-    editUser: null,
-    newRole: '',
+    viewDocente: null,
+    editDocente: null,
     newEstado: ''
   };
 
   async componentDidMount() {
+    await this.fetchDocentes();
+  }
+
+  fetchDocentes = async () => {
     try {
-      const res = await axios.get('http://localhost:5002/api/usuarios');
-      this.setState({ usuarios: res.data });
+      const q = query(
+        collection(db, 'usuarios'),
+        where('rol', '==', 'docente')
+      );
+      const snap = await getDocs(q);
+      const docentes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      this.setState({ docentes });
     } catch (err) {
-      console.error('Error al obtener docentes:', err);
+      console.error('Error fetching docentes:', err);
     }
   }
 
-  handleFiltroChange = (e) => {
-    this.setState({ filtro: e.target.value });
-  }
+  handleFiltroChange = (e) => this.setState({ filtro: e.target.value });
 
   safe = (v) => (v || '').toString().toLowerCase();
 
-  openViewModal = (user) => {
-    this.setState({ viewUser: user });
-  }
+  openViewModal = (docente) => this.setState({ viewDocente: docente });
+  closeViewModal = () => this.setState({ viewDocente: null });
 
-  closeViewModal = () => {
-    this.setState({ viewUser: null });
-  }
+  openEditModal = (docente) => this.setState({
+    editDocente: docente,
+    newEstado: (docente.estado ?? 1).toString()
+  });
+  closeEditModal = () => this.setState({ editDocente: null });
 
-  openEditModal = (user) => {
-    this.setState({
-      editUser: user,
-      newRole: user.rol,
-      newEstado: (user.estado ?? 1).toString()
-    });
-  }
-
-  closeEditModal = () => {
-    this.setState({ editUser: null });
-  }
-
-  handleEditChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
+  handleEstadoChange = (e) => this.setState({ newEstado: e.target.value });
 
   saveEdit = async () => {
-    const { editUser, newRole, newEstado } = this.state;
+    const { editDocente, newEstado } = this.state;
     try {
-      await axios.patch(
-        `http://localhost:5002/api/usuarios/${editUser.id}`,
-        { rol: newRole, estado: Number(newEstado) }
-      );
-      const res = await axios.get('http://localhost:5002/api/usuarios');
-      this.setState({ usuarios: res.data, editUser: null });
+      const ref = doc(db, 'usuarios', editDocente.id);
+      await updateDoc(ref, { estado: Number(newEstado) });
+      this.closeEditModal();
+      await this.fetchDocentes();
     } catch (err) {
-      console.error('Error al actualizar docente:', err);
+      console.error('Error updating docente:', err);
     }
   }
 
   render() {
-    const { usuarios, filtro, viewUser, editUser, newRole, newEstado } = this.state;
+    const { docentes, filtro, viewDocente, editDocente, newEstado } = this.state;
     const texto = filtro.toLowerCase();
-    const filtrados = usuarios.filter(u =>
-      u.rol === 'docente' && (
-        this.safe(u.nombre).includes(texto) ||
-        this.safe(u.apellido_paterno).includes(texto) ||
-        this.safe(u.apellido_materno).includes(texto) ||
-        this.safe(u.telefono).includes(texto) ||
-        this.safe(u.ci).includes(texto) ||
-        this.safe(u.correo).includes(texto)
-      )
+    const filtrados = docentes.filter(d =>
+      this.safe(d.nombre).includes(texto) ||
+      this.safe(d.apellido_paterno).includes(texto) ||
+      this.safe(d.apellido_materno).includes(texto) ||
+      this.safe(d.telefono).includes(texto) ||
+      this.safe(d.carnet_identidad).includes(texto) ||
+      this.safe(d.correo).includes(texto)
     );
 
     return (
       <>
-  
+        
         <div className="dashboard-layout">
-       
-
+        
           <main className="main-content listar-usuarios-container">
             <div className="card listar-usuarios-card p-4">
               <h3 className="mb-4">Listado de Docentes</h3>
               <div className="mb-3">
                 <input
                   type="text"
-                  placeholder="Filtrar por nombre, apellidos, CI o correo..."
+                  placeholder="Filtrar docentes..."
                   className="form-control"
                   value={filtro}
                   onChange={this.handleFiltroChange}
@@ -114,22 +105,28 @@ class ListarDocentes extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtrados.map(u => (
-                      <tr key={u.id}>
-                        <td>{u.nombre}</td>
-                        <td>{u.apellido_paterno}</td>
-                        <td>{u.apellido_materno}</td>
-                        <td>{u.telefono}</td>
-                        <td>{u.ci}</td>
-                        <td>{u.correo}</td>
-                        <td>{u.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</td>
-                        <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
+                    {filtrados.map(d => (
+                      <tr key={d.id}>
+                        <td>{d.nombre}</td>
+                        <td>{d.apellido_paterno}</td>
+                        <td>{d.apellido_materno}</td>
+                        <td>{d.telefono}</td>
+                        <td>{d.carnet_identidad}</td>
+                        <td>{d.correo}</td>
+                        <td>{d.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</td>
+                        <td>{new Date(d.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
                         <td>
-                          <button className="btn btn-sm btn-outline-info me-2" onClick={() => this.openViewModal(u)}>
+                          <button
+                            className="btn btn-sm btn-outline-info me-2"
+                            onClick={() => this.openViewModal(d)}
+                          >
                             <Eye size={16} /> Ver
                           </button>
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => this.openEditModal(u)}>
-                            <Edit2 size={16} /> Modificar
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => this.openEditModal(d)}
+                          >
+                            Estado
                           </button>
                         </td>
                       </tr>
@@ -146,8 +143,7 @@ class ListarDocentes extends Component {
           </main>
         </div>
 
-        {/* Modales idénticos a ListarUsuarios */}
-        {viewUser && (
+        {viewDocente && (
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
@@ -156,12 +152,12 @@ class ListarDocentes extends Component {
                   <button type="button" className="btn-close" onClick={this.closeViewModal}></button>
                 </div>
                 <div className="modal-body">
-                  <p><strong>Nombre:</strong> {viewUser.nombre} {viewUser.apellido_paterno} {viewUser.apellido_materno}</p>
-                  <p><strong>Teléfono:</strong> {viewUser.telefono}</p>
-                  <p><strong>CI:</strong> {viewUser.ci}</p>
-                  <p><strong>Correo:</strong> {viewUser.correo}</p>
-                  <p><strong>Estado:</strong> {viewUser.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</p>
-                  <p><strong>Fecha Nac.:</strong> {new Date(viewUser.fecha_nacimiento).toLocaleDateString('es-BO')}</p>
+                  <p><strong>Nombre:</strong> {viewDocente.nombre} {viewDocente.apellido_paterno} {viewDocente.apellido_materno}</p>
+                  <p><strong>Teléfono:</strong> {viewDocente.telefono}</p>
+                  <p><strong>CI:</strong> {viewDocente.carnet_identidad}</p>
+                  <p><strong>Correo:</strong> {viewDocente.correo}</p>
+                  <p><strong>Estado:</strong> {viewDocente.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</p>
+                  <p><strong>Fecha Nac.:</strong> {new Date(viewDocente.fecha_nacimiento).toLocaleDateString('es-BO')}</p>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={this.closeViewModal}>Cerrar</button>
@@ -171,18 +167,18 @@ class ListarDocentes extends Component {
           </div>
         )}
 
-        {editUser && (
+        {editDocente && (
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Modificar Docente</h5>
+                  <h5 className="modal-title">Modificar Estado</h5>
                   <button type="button" className="btn-close" onClick={this.closeEditModal}></button>
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
                     <label className="form-label">Estado</label>
-                    <select name="newEstado" value={newEstado} onChange={this.handleEditChange} className="form-select">
+                    <select name="newEstado" value={newEstado} onChange={this.handleEstadoChange} className="form-select">
                       <option value="1">Habilitado</option>
                       <option value="2">Deshabilitado</option>
                     </select>

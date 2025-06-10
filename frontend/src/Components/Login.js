@@ -1,67 +1,83 @@
+// frontend/src/components/Login.js
 import React, { Component } from 'react';
-import axios from 'axios';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import '../Styles/Login.css';
 
 class Login extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      correo: '',
-      contrasena: '',
-      mensaje: '',
-      usuario: null
-    };
-  }
+  state = {
+    correo: '',
+    contrasena: '',
+    mensaje: ''
+  };
 
   handleChange = (e) => {
     this.setState({ [e.target.name]: e.target.value });
   }
-handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post('http://localhost:5002/api/auth/login', {
-      correo: this.state.correo,
-      contrasena: this.state.contrasena
-    });
 
-    const usuario = res.data.usuario;
+  handleSubmit = async (e) => {
+    e.preventDefault();
+    const { correo, contrasena } = this.state;
+    this.setState({ mensaje: '' });
 
-    // 1. Guardar en localStorage
-    localStorage.setItem('usuario', JSON.stringify(usuario));
+    try {
+      // 1) Autenticar con Firebase Auth
+      await signInWithEmailAndPassword(auth, correo, contrasena);
 
-    // 2. Redirigir según el rol
-    switch (usuario.rol) {
-      case 'admin':
-        window.location.href = '/admin';
-        break;
-      case 'docente':
-        window.location.href = '/docente';
-        break;
-      case 'estudiante':
-        window.location.href = '/estudiante';
-        break;
-      default:
-        this.setState({ mensaje: 'Rol desconocido' });
+      // 2) Buscar el perfil en Firestore por correo
+      const usuariosCol = collection(db, 'usuarios');
+      const q = query(usuariosCol, where('correo', '==', correo));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        this.setState({ mensaje: 'Usuario no registrado en Firestore.' });
+        return;
+      }
+
+      // Tomamos el primer documento que coincida
+      const userDoc = snap.docs[0];
+      const perfil  = userDoc.data();
+      const uidFire = userDoc.id;
+
+      // 3) Guardar en localStorage
+      localStorage.setItem('usuario', JSON.stringify({ uid: uidFire, ...perfil }));
+
+      // 4) Redirigir según rol
+      switch (perfil.rol) {
+        case 'admin':
+          window.location.href = '/admin';
+          break;
+        case 'docente':
+          window.location.href = '/docente';
+          break;
+        case 'estudiante':
+          window.location.href = '/estudiante';
+          break;
+        default:
+          this.setState({ mensaje: 'Rol desconocido en perfil.' });
+      }
+
+    } catch (error) {
+      console.error('Error en login:', error);
+      this.setState({ mensaje: 'Credenciales incorrectas.' });
     }
-  } catch (error) {
-    this.setState({ mensaje: 'Error: Credenciales incorrectas' });
   }
-}
-
 
   render() {
+    const { correo, contrasena, mensaje } = this.state;
     return (
       <div className="login-container">
         <div className="login-card shadow-lg p-4">
           <h3 className="mb-4 text-center">Iniciar Sesión</h3>
-          <form onSubmit={this.handleSubmit}>
+          <form onSubmit={this.handleSubmit} noValidate>
             <div className="form-group mb-3">
               <label>Email</label>
               <input
                 type="email"
                 name="correo"
                 className="form-control"
-                value={this.state.correo}
+                value={correo}
                 onChange={this.handleChange}
                 required
               />
@@ -72,16 +88,15 @@ handleSubmit = async (e) => {
                 type="password"
                 name="contrasena"
                 className="form-control"
-                value={this.state.contrasena}
+                value={contrasena}
                 onChange={this.handleChange}
                 required
               />
             </div>
             <button type="submit" className="btn btn-primary w-100">Entrar</button>
           </form>
-
-          {this.state.mensaje && (
-            <div className="alert alert-info mt-3 text-center">{this.state.mensaje}</div>
+          {mensaje && (
+            <div className="alert alert-danger mt-3 text-center">{mensaje}</div>
           )}
         </div>
       </div>

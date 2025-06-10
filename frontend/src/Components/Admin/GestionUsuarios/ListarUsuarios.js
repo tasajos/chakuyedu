@@ -1,7 +1,8 @@
+// frontend/src/Components/Admin/GestionUsuarios/ListarUsuarios.js
 import React, { Component } from 'react';
-import axios from 'axios';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../../firebase';
 import { Eye, Edit2 } from 'lucide-react';
-
 import '../../../Styles/Admin/ListarUsuarios.css';
 
 class ListarUsuarios extends Component {
@@ -15,56 +16,46 @@ class ListarUsuarios extends Component {
   };
 
   async componentDidMount() {
+    await this.fetchUsuarios();
+  }
+
+  fetchUsuarios = async () => {
     try {
-      const res = await axios.get('http://localhost:5002/api/usuarios');
-      this.setState({ usuarios: res.data });
+      const snapshot = await getDocs(collection(db, 'usuarios'));
+      const usuarios = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this.setState({ usuarios });
     } catch (err) {
-      console.error('Error al obtener usuarios:', err);
+      console.error('Error fetching usuarios:', err);
     }
   }
 
-  handleFiltroChange = (e) => {
+  handleFiltroChange = e => {
     this.setState({ filtro: e.target.value });
   }
 
-  safe = (v) => (v || '').toString().toLowerCase();
+  safe = v => (v || '').toString().toLowerCase();
 
-  openViewModal = (user) => {
-    this.setState({ viewUser: user });
-  }
+  openViewModal = user => this.setState({ viewUser: user });
+  closeViewModal = () => this.setState({ viewUser: null });
 
-  closeViewModal = () => {
-    this.setState({ viewUser: null });
-  }
+  openEditModal = user => this.setState({
+    editUser: user,
+    newRole: user.rol,
+    newEstado: (user.estado ?? 1).toString()
+  });
+  closeEditModal = () => this.setState({ editUser: null });
 
-  openEditModal = (user) => {
-    this.setState({
-      editUser: user,
-      newRole: user.rol,
-      newEstado: (user.estado ?? 1).toString()
-    });
-  }
-
-  closeEditModal = () => {
-    this.setState({ editUser: null });
-  }
-
-  handleEditChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
+  handleEditChange = e => this.setState({ [e.target.name]: e.target.value });
 
   saveEdit = async () => {
     const { editUser, newRole, newEstado } = this.state;
     try {
-      await axios.patch(
-        `http://localhost:5002/api/usuarios/${editUser.id}`,
-        { rol: newRole, estado: Number(newEstado) }
-      );
-      // Refresh list
-      const res = await axios.get('http://localhost:5002/api/usuarios');
-      this.setState({ usuarios: res.data, editUser: null });
+      const userRef = doc(db, 'usuarios', editUser.id);
+      await updateDoc(userRef, { rol: newRole, estado: Number(newEstado) });
+      await this.fetchUsuarios();
+      this.closeEditModal();
     } catch (err) {
-      console.error('Error al actualizar usuario:', err);
+      console.error('Error updating usuario:', err);
     }
   }
 
@@ -76,17 +67,16 @@ class ListarUsuarios extends Component {
       this.safe(u.apellido_paterno).includes(texto) ||
       this.safe(u.apellido_materno).includes(texto) ||
       this.safe(u.telefono).includes(texto) ||
-      this.safe(u.ci).includes(texto) ||
+      this.safe(u.carnet_identidad).includes(texto) ||
       this.safe(u.correo).includes(texto) ||
       this.safe(u.rol).includes(texto)
     );
 
     return (
       <>
-   
+  
         <div className="dashboard-layout">
-       
-
+      
           <main className="main-content listar-usuarios-container">
             <div className="card listar-usuarios-card p-4">
               <h3 className="mb-4">Listado de Usuarios</h3>
@@ -116,29 +106,23 @@ class ListarUsuarios extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtrados.map((u) => (
+                    {filtrados.map(u => (
                       <tr key={u.id}>
                         <td>{u.nombre}</td>
                         <td>{u.apellido_paterno}</td>
                         <td>{u.apellido_materno}</td>
                         <td>{u.telefono}</td>
-                        <td>{u.ci}</td>
+                        <td>{u.carnet_identidad}</td>
                         <td>{u.correo}</td>
                         <td>{u.rol}</td>
                         <td>{u.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</td>
                         <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
                         <td>
-                          <button
-                            className="btn btn-sm btn-outline-info me-2"
-                            onClick={() => this.openViewModal(u)}
-                          >
-                            <Eye size={16} /> Ver
+                          <button className="btn btn-sm btn-outline-info me-2" onClick={() => this.openViewModal(u)}>
+                            <Eye size={16}/> Ver
                           </button>
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => this.openEditModal(u)}
-                          >
-                            <Edit2 size={16} /> Modificar
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => this.openEditModal(u)}>
+                            <Edit2 size={16}/> Modificar
                           </button>
                         </td>
                       </tr>
@@ -155,7 +139,7 @@ class ListarUsuarios extends Component {
           </main>
         </div>
 
-        {/* Modal Ver Usuario */}
+        {/* View Modal */}
         {viewUser && (
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-dialog-centered">
@@ -167,7 +151,7 @@ class ListarUsuarios extends Component {
                 <div className="modal-body">
                   <p><strong>Nombre:</strong> {viewUser.nombre} {viewUser.apellido_paterno} {viewUser.apellido_materno}</p>
                   <p><strong>Teléfono:</strong> {viewUser.telefono}</p>
-                  <p><strong>CI:</strong> {viewUser.ci}</p>
+                  <p><strong>CI:</strong> {viewUser.carnet_identidad}</p>
                   <p><strong>Correo:</strong> {viewUser.correo}</p>
                   <p><strong>Rol:</strong> {viewUser.rol}</p>
                   <p><strong>Estado:</strong> {viewUser.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</p>
@@ -181,7 +165,7 @@ class ListarUsuarios extends Component {
           </div>
         )}
 
-        {/* Modal Modificar Usuario */}
+        {/* Edit Modal */}
         {editUser && (
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-dialog-centered">
@@ -193,12 +177,7 @@ class ListarUsuarios extends Component {
                 <div className="modal-body">
                   <div className="mb-3">
                     <label className="form-label">Rol</label>
-                    <select
-                      name="newRole"
-                      value={newRole}
-                      onChange={this.handleEditChange}
-                      className="form-select"
-                    >
+                    <select name="newRole" value={newRole} onChange={this.handleEditChange} className="form-select">
                       <option value="estudiante">Estudiante</option>
                       <option value="docente">Docente</option>
                       <option value="admin">Administrador</option>
@@ -206,12 +185,7 @@ class ListarUsuarios extends Component {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Estado</label>
-                    <select
-                      name="newEstado"
-                      value={newEstado}
-                      onChange={this.handleEditChange}
-                      className="form-select"
-                    >
+                    <select name="newEstado" value={newEstado} onChange={this.handleEditChange} className="form-select">
                       <option value="1">Habilitado</option>
                       <option value="2">Deshabilitado</option>
                     </select>

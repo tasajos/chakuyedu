@@ -1,6 +1,8 @@
 // frontend/src/components/CrearUsuario.js
 import React, { Component } from 'react';
-import axios from 'axios';
+import { auth, db } from '../../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import '../../../Styles/Admin/CrearUsuarios.css';
 
 class CrearUsuario extends Component {
@@ -12,6 +14,7 @@ class CrearUsuario extends Component {
     rol: 'estudiante',
     carnet_identidad: '',
     correo: '',
+    contrasena: '',
     fecha_nacimiento: '',
     mensaje: ''
   };
@@ -19,8 +22,6 @@ class CrearUsuario extends Component {
   handleChange = (e) => {
     const { name, value } = e.target;
     this.setState({ [name]: value });
-
-    // sincronizar contraseña con carnet
     if (name === 'carnet_identidad') {
       this.setState({ contrasena: value });
     }
@@ -28,10 +29,46 @@ class CrearUsuario extends Component {
 
   handleSubmit = async (e) => {
     e.preventDefault();
-    const { contrasena = this.state.carnet_identidad, mensaje, ...data } = this.state;
+    const {
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      telefono,
+      rol,
+      carnet_identidad,
+      correo,
+      contrasena,
+      fecha_nacimiento
+    } = this.state;
+
     try {
-      const res = await axios.post('http://localhost:5002/api/usuarios/crear', { ...data, contrasena });
+      // 1. Crear usuario en Firebase Auth
+      const userCred = await createUserWithEmailAndPassword(
+        auth,
+        correo,
+        contrasena
+      );
+      const uid = userCred.user.uid;
+
+      // 2. Guardar perfil en Firestore en colección "usuarios"
+      await setDoc(
+        doc(db, 'usuarios', uid),
+        {
+          nombre,
+          apellido_paterno,
+          apellido_materno,
+          telefono,
+          rol,
+          carnet_identidad,
+          correo,
+          fecha_nacimiento,
+          estado: 1,
+          createdAt: serverTimestamp()
+        }
+      );
+
       this.setState({
+        mensaje: 'Usuario creado correctamente',
         nombre: '',
         apellido_paterno: '',
         apellido_materno: '',
@@ -39,19 +76,26 @@ class CrearUsuario extends Component {
         rol: 'estudiante',
         carnet_identidad: '',
         correo: '',
-        fecha_nacimiento: '',
-        mensaje: res.data.mensaje
+        contrasena: '',
+        fecha_nacimiento: ''
       });
-    } catch {
-      this.setState({ mensaje: 'Error al crear usuario' });
+    } catch (error) {
+      console.error('Error al crear usuario en Firebase:', error);
+      this.setState({ mensaje: 'Error al crear usuario: ' + error.message });
     }
   }
 
   render() {
     const {
-      nombre, apellido_paterno, apellido_materno,
-      telefono, rol, carnet_identidad,
-      correo, fecha_nacimiento, mensaje
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      telefono,
+      rol,
+      carnet_identidad,
+      correo,
+      fecha_nacimiento,
+      mensaje
     } = this.state;
 
     return (
@@ -59,7 +103,6 @@ class CrearUsuario extends Component {
         <div className="card crear-usuario-card p-4">
           <h3 className="mb-4 text-center">Crear Usuario</h3>
           <form onSubmit={this.handleSubmit}>
-            {/* Fila 1: Nombre / Apellido Paterno */}
             <div className="row gx-3 mb-3">
               <div className="col-md-6">
                 <label>Nombre</label>
@@ -85,7 +128,6 @@ class CrearUsuario extends Component {
               </div>
             </div>
 
-            {/* Fila 2: Apellido Materno / Teléfono */}
             <div className="row gx-3 mb-3">
               <div className="col-md-6">
                 <label>Apellido Materno</label>
@@ -111,7 +153,6 @@ class CrearUsuario extends Component {
               </div>
             </div>
 
-            {/* Fila 3: Rol / Carnet de Identidad */}
             <div className="row gx-3 mb-3">
               <div className="col-md-6">
                 <label>Rol</label>
@@ -140,7 +181,6 @@ class CrearUsuario extends Component {
               </div>
             </div>
 
-            {/* Fila 4: Correo / Contraseña */}
             <div className="row gx-3 mb-3">
               <div className="col-md-6">
                 <label>Correo</label>
@@ -165,7 +205,6 @@ class CrearUsuario extends Component {
               </div>
             </div>
 
-            {/* Fila 5: Fecha de Nacimiento */}
             <div className="row gx-3 mb-4">
               <div className="col-md-6">
                 <label>Fecha de Nacimiento</label>

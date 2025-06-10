@@ -1,6 +1,16 @@
 // frontend/src/components/AsignarEstudiantes.js
 import React, { Component } from 'react';
-import axios from 'axios';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  getDoc,
+  doc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '../../../firebase';
 
 import '../../../Styles/Admin/AsignarEstudiantes.css';
 
@@ -9,20 +19,24 @@ class AsignarEstudiantes extends Component {
     estudiantes: [],
     materias: [],
     selectedStudent: '',
-    assignedMaterias: [],
+    assignedMaterias: [],  // [{ materia_id, nombre }]
     selectedMateria: '',
     mensaje: ''
   };
 
   async componentDidMount() {
+    // Carga estudiantes y materias
+    const usuariosCol = collection(db, 'usuarios');
+    const matCol      = collection(db, 'materias');
     try {
-      const [resEst, resMat] = await Promise.all([
-        axios.get('http://localhost:5002/api/usuarios'),
-        axios.get('http://localhost:5002/api/materias')
+      const [uSnap, mSnap] = await Promise.all([
+        getDocs(query(usuariosCol, where('rol', '==', 'estudiante'))),
+        getDocs(matCol)
       ]);
-      // Filtrar solo estudiantes
-      const estudiantes = resEst.data.filter(u => u.rol === 'estudiante');
-      this.setState({ estudiantes, materias: resMat.data });
+
+      const estudiantes = uSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const materias    = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      this.setState({ estudiantes, materias });
     } catch (err) {
       console.error('Error cargando datos:', err);
     }
@@ -31,14 +45,25 @@ class AsignarEstudiantes extends Component {
   handleStudentChange = async (e) => {
     const selectedStudent = e.target.value;
     this.setState({ selectedStudent, mensaje: '', selectedMateria: '' });
-    if (selectedStudent) {
-      const res = await axios.get(
-        `http://localhost:5002/api/inscripciones/${selectedStudent}`
-      );
-      this.setState({ assignedMaterias: res.data });
-    } else {
+    if (!selectedStudent) {
       this.setState({ assignedMaterias: [] });
+      return;
     }
+
+    // Obtener inscripciones
+    const inscCol = collection(db, 'estudiante_materia');
+    const q       = query(inscCol, where('estudiante_id', '==', selectedStudent));
+    const snap    = await getDocs(q);
+
+    // Por cada inscripcion obtener nombre de materia
+    const tareas = snap.docs.map(async docIns => {
+      const { materia_id } = docIns.data();
+      const matDoc = await getDoc(doc(db, 'materias', materia_id));
+      return { materia_id, nombre: matDoc.data().nombre };
+    });
+
+    const assignedMaterias = await Promise.all(tareas);
+    this.setState({ assignedMaterias });
   }
 
   handleMateriaChange = (e) => {
@@ -49,15 +74,14 @@ class AsignarEstudiantes extends Component {
     const { selectedStudent, selectedMateria } = this.state;
     if (!selectedStudent || !selectedMateria) return;
     try {
-      await axios.post('http://localhost:5002/api/inscripciones', {
-        estudiante_id: Number(selectedStudent),
-        materia_id: Number(selectedMateria)
+      await addDoc(collection(db, 'estudiante_materia'), {
+        estudiante_id: selectedStudent,
+        materia_id: selectedMateria,
+        createdAt: serverTimestamp()
       });
       // refrescar asignaciones
-      const res = await axios.get(
-        `http://localhost:5002/api/inscripciones/${selectedStudent}`
-      );
-      this.setState({ assignedMaterias: res.data, selectedMateria: '', mensaje: 'Asignación correcta' });
+      await this.handleStudentChange({ target: { value: selectedStudent } });
+      this.setState({ selectedMateria: '', mensaje: 'Asignación correcta' });
     } catch (err) {
       console.error('Error asignando materia:', err);
       this.setState({ mensaje: 'No se pudo asignar.' });
@@ -70,13 +94,15 @@ class AsignarEstudiantes extends Component {
       assignedMaterias, selectedMateria, mensaje
     } = this.state;
 
-    // Evitar duplicar materias: extraer lista de IDs ya asignados
-    const asignadasIds = assignedMaterias.map(am => am.materia_id);
-    const disponibles = materias.filter(mat => !asignadasIds.includes(mat.id));
+    // Filtrar materias disponibles
+    const asignadasIds = assignedMaterias.map(a => a.materia_id);
+    const disponibles  = materias.filter(m => !asignadasIds.includes(m.id));
 
     return (
       <>
+
         <div className="dashboard-layout">
+       
           <main className="main-content asignar-estudiantes-container">
             <div className="card p-4">
               <h3 className="mb-4">Asignar Estudiantes a Materias</h3>
