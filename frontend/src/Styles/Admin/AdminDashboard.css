@@ -1,34 +1,53 @@
-/* FONDO claro y fuente profesional */
-.admin-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.dashboard-layout {
+  display: flex;
 }
 
+/* ahora el sidebar forma parte del flex, ocupa 200px y empuja al main */
+.sidebar-menu {
+  flex: 0 0 200px; /* ancho fijo */
+}
+
+/* el main-content ocupa el resto, sin margin-left */
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+/* tarjetas: tal cual las tenías */
+.admin-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
 .admin-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
-
 .icon-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 0.75rem;
   border-radius: 50%;
   background-color: #f5f5f5;
 }
-
 .card-title {
   font-weight: 600;
-  margin-top: 12px;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+.card-text {
+  font-size: 0.85rem;
+  color: #555;
 }
 
-.card-text {
-  font-size: 0.9rem;
-  color: #555;
+/* Responsive: en móviles hace que el sidebar se esconda (si quieres) */
+@media (max-width: 767px) {
+  .sidebar-menu {
+    display: none;
+  }
 }

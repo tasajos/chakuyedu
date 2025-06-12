@@ -1,7 +1,6 @@
-// frontend/src/components/GestionAcademica.js
+// frontend/src/Components/Admin/GestionAcademica.js
 import React, { Component } from 'react';
 import { BookOpen, UserPlus, UserCheck } from 'lucide-react';
-
 import '../../../Styles/Admin/GestionAcademica.css';
 
 class GestionAcademica extends Component {
@@ -29,29 +28,30 @@ class GestionAcademica extends Component {
   render() {
     return (
       <>
-        
-
-        <div className="container mt-5">
-          <h2 className="mb-4">Gestión Académica</h2>
-          <div className="row g-4">
-            {this.renderCard(
-              <BookOpen size={48} className="text-primary" />,
-              'Crear Materias',
-              'Definir y dar de alta nuevas materias.',
-              '/admin/academica/crear-materias'
-            )}
-            {this.renderCard(
-              <UserPlus size={48} className="text-success" />,
-              'Asignar Estudiantes',
-              'Inscribir estudiantes en materias.',
-              '/admin/GestionAcademica/AsignarEstudiantes'
-            )}
-            {this.renderCard(
-              <UserCheck size={48} className="text-warning" />,
-              'Asignar Docente–Materia',
-              'Vincular docentes a las materias.',
-              '/admin/GestionAcademica/AsignarDocenteMateria'
-            )}
+        {/* Contenedor con margen izquierdo para prevenir solapamiento con sidebar */}
+        <div className="gestion-academica-container">
+          <div className="container mt-5">
+            <h2 className="mb-4">Gestión Académica</h2>
+            <div className="row g-4">
+              {this.renderCard(
+                <BookOpen size={48} className="text-primary" />,
+                'Crear Materias',
+                'Definir y dar de alta nuevas materias.',
+                '/admin/academica/crear-materias'
+              )}
+              {this.renderCard(
+                <UserPlus size={48} className="text-success" />,
+                'Asignar Estudiantes',
+                'Inscribir estudiantes en materias.',
+                '/admin/GestionAcademica/AsignarEstudiantes'
+              )}
+              {this.renderCard(
+                <UserCheck size={48} className="text-warning" />,
+                'Asignar Docente–Materia',
+                'Vincular docentes a las materias.',
+                '/admin/GestionAcademica/AsignarDocenteMateria'
+              )}
+            </div>
           </div>
         </div>
       </>
