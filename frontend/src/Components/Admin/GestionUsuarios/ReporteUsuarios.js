@@ -1,10 +1,8 @@
-// src/Components/Admin/GestionUsuarios/ReporteUsuarios.js
-
 import React, { Component } from 'react';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import { Users, UserCheck, ChevronDown } from 'lucide-react';
-import '../../../Styles/Admin/ReporteUsuarios.css'; // Crearemos este archivo
+import '../../../Styles/Admin/ReporteUsuarios.css';
 
 class ReporteUsuarios extends Component {
   state = {
@@ -13,10 +11,14 @@ class ReporteUsuarios extends Component {
       totalDocentes: 0,
       porEstado: {},
     },
+    allUsers: [],
     materiasConDetalles: [],
     loading: true,
     error: null,
-    activeAccordionKey: null, // Para controlar qué acordeón está abierto
+    activeAccordionKey: null,
+    isModalOpen: false,
+    modalTitle: '',
+    usersInModal: [],
   };
 
   // Función para mapear el número de estado a texto
@@ -37,26 +39,28 @@ class ReporteUsuarios extends Component {
   fetchReportData = async () => {
     this.setState({ loading: true, error: null });
     try {
-      // --- 1. Obtener estadísticas de usuarios ---
+      // 1. Obtener todos los usuarios y guardarlos
       const usuariosSnap = await getDocs(collection(db, 'usuarios'));
+      const allUsers = usuariosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 2. Calcular estadísticas a partir de la lista de usuarios
       const stats = {
         totalEstudiantes: 0,
         totalDocentes: 0,
         porEstado: {},
       };
 
-      usuariosSnap.forEach(doc => {
-        const user = doc.data();
+      allUsers.forEach(user => {
         if (user.rol === 'estudiante') {
           stats.totalEstudiantes++;
         } else if (user.rol === 'docente') {
           stats.totalDocentes++;
         }
-        const estadoKey = user.estado || 2; // Si no tiene estado, se asume Deshabilitado
+        const estadoKey = user.estado || 2; // Asumir Deshabilitado si no hay estado
         stats.porEstado[estadoKey] = (stats.porEstado[estadoKey] || 0) + 1;
       });
 
-      // --- 2. Obtener detalles de materias ---
+      // 3. Obtener detalles de materias y sus inscripciones
       const materiasSnap = await getDocs(collection(db, 'materias'));
       
       const materiasPromises = materiasSnap.docs.map(async (materiaDoc) => {
@@ -65,7 +69,7 @@ class ReporteUsuarios extends Component {
         let docenteNombre = 'No asignado';
         let estudiantes = [];
 
-        // Buscar docente
+        // Buscar docente asignado a la materia
         const dmQuery = query(collection(db, 'docente_materia'), where('materia_id', '==', materiaId));
         const dmSnap = await getDocs(dmQuery);
         if (!dmSnap.empty) {
@@ -77,7 +81,7 @@ class ReporteUsuarios extends Component {
           }
         }
 
-        // Buscar estudiantes
+        // Buscar estudiantes inscritos en la materia
         const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
         const emSnap = await getDocs(emQuery);
         if (!emSnap.empty) {
@@ -96,7 +100,7 @@ class ReporteUsuarios extends Component {
 
       const materiasConDetalles = await Promise.all(materiasPromises);
 
-      this.setState({ stats, materiasConDetalles, loading: false });
+      this.setState({ stats, materiasConDetalles, allUsers, loading: false });
 
     } catch (err) {
       console.error("Error al generar el reporte:", err);
@@ -110,8 +114,29 @@ class ReporteUsuarios extends Component {
     }));
   }
 
+  handleEstadoClick = (estadoKey) => {
+    const { allUsers } = this.state;
+    const estadoNumero = Number(estadoKey);
+    
+    const filteredUsers = allUsers.filter(user => (user.estado || 2) === estadoNumero);
+
+    this.setState({
+      isModalOpen: true,
+      modalTitle: `Usuarios en estado: ${this.renderEstado(estadoNumero)}`,
+      usersInModal: filteredUsers,
+    });
+  }
+
+  closeModal = () => {
+    this.setState({
+      isModalOpen: false,
+      modalTitle: '',
+      usersInModal: [],
+    });
+  }
+
   render() {
-    const { stats, materiasConDetalles, loading, error, activeAccordionKey } = this.state;
+    const { stats, materiasConDetalles, loading, error, activeAccordionKey, isModalOpen, modalTitle, usersInModal } = this.state;
 
     if (loading) {
       return <div className="reporte-container"><p>Generando reporte...</p></div>;
@@ -152,8 +177,12 @@ class ReporteUsuarios extends Component {
           <div className="col-md-4">
             <div className="stat-card breakdown">
                 <span className="stat-title mb-2">Usuarios por Estado</span>
-                {Object.keys(stats.porEstado).map(estadoKey => (
-                  <div key={estadoKey} className="breakdown-row">
+                {Object.keys(stats.porEstado).sort().map(estadoKey => (
+                  <div 
+                    key={estadoKey} 
+                    className="breakdown-row clickable"
+                    onClick={() => this.handleEstadoClick(estadoKey)}
+                  >
                     <span>{this.renderEstado(estadoKey)}</span>
                     <span className="fw-bold">{stats.porEstado[estadoKey]}</span>
                   </div>
@@ -204,6 +233,47 @@ class ReporteUsuarios extends Component {
             </div>
           ))}
         </div>
+        
+        {/* --- Modal para mostrar la lista de usuarios --- */}
+        {isModalOpen && (
+          <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">{modalTitle}</h5>
+                  <button type="button" className="btn-close" onClick={this.closeModal}></button>
+                </div>
+                <div className="modal-body">
+                  {usersInModal.length > 0 ? (
+                    <table className="table table-striped table-sm">
+                      <thead>
+                        <tr>
+                          <th>Nombre Completo</th>
+                          <th>Rol</th>
+                          <th>Correo Electrónico</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usersInModal.map(user => (
+                          <tr key={user.id}>
+                            <td>{`${user.nombre} ${user.apellido_paterno || ''} ${user.apellido_materno || ''}`}</td>
+                            <td>{user.rol}</td>
+                            <td>{user.correo}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className="text-center text-muted">No hay usuarios en este estado.</p>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={this.closeModal}>Cerrar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
