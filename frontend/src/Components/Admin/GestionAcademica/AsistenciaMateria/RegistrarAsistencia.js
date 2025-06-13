@@ -5,7 +5,6 @@ import { db } from '../../../../firebase';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import '../../../../Styles/Admin/RegistrarAsistencia.css';
 
-// Función para obtener la fecha de hoy en formato YYYY-MM-DD
 const getTodayDateString = () => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -21,7 +20,8 @@ class RegistrarAsistencia extends Component {
         docente: null,
         selectedMateriaId: '',
         selectedDate: getTodayDateString(),
-        asistencias: {}, // { estudianteId: 'presente' | 'ausente' | 'permiso' }
+        asistencias: {},
+        isAsistenciaRegistrada: false,
         loadingMaterias: true,
         loadingDetalles: false,
         saving: false,
@@ -32,7 +32,6 @@ class RegistrarAsistencia extends Component {
         this.loadMaterias();
     }
 
-    // Carga todas las materias para el selector
     loadMaterias = async () => {
         try {
             const materiasSnap = await getDocs(collection(db, 'materias'));
@@ -43,26 +42,54 @@ class RegistrarAsistencia extends Component {
             this.setState({ mensaje: 'Error al cargar materias.', loadingMaterias: false });
         }
     }
+    
+    checkAndLoadAsistencia = async (materiaId, fecha) => {
+        if (!materiaId || !fecha) return;
 
-    // Se activa al seleccionar una materia del dropdown
+        this.setState({ loadingDetalles: true });
+        const q = query(collection(db, 'asistencias'), where('materia_id', '==', materiaId), where('fecha', '==', fecha));
+        const asistenciaSnap = await getDocs(q);
+
+        if (!asistenciaSnap.empty) {
+            const loadedAsistencias = {};
+            asistenciaSnap.docs.forEach(doc => {
+                const data = doc.data();
+                loadedAsistencias[data.estudiante_id] = data.estado;
+            });
+            this.setState({
+                asistencias: loadedAsistencias,
+                isAsistenciaRegistrada: true,
+                mensaje: 'Asistencia para esta fecha ya fue registrada (modo solo lectura).',
+            });
+        } else {
+            const initialAsistencias = {};
+            this.state.estudiantes.forEach(est => {
+                initialAsistencias[est.id] = 'presente';
+            });
+            this.setState({
+                asistencias: initialAsistencias,
+                isAsistenciaRegistrada: false,
+                mensaje: '',
+            });
+        }
+        this.setState({ loadingDetalles: false });
+    }
+
     handleMateriaChange = async (e) => {
         const materiaId = e.target.value;
-        this.setState({ 
-            selectedMateriaId: materiaId, 
-            loadingDetalles: true, 
-            docente: null, 
-            estudiantes: [], 
+        this.setState({
+            selectedMateriaId: materiaId,
+            docente: null,
+            estudiantes: [],
             asistencias: {},
-            mensaje: '' 
+            isAsistenciaRegistrada: false,
+            mensaje: '',
         });
 
-        if (!materiaId) {
-            this.setState({ loadingDetalles: false });
-            return;
-        }
-
+        if (!materiaId) return;
+        
+        this.setState({ loadingDetalles: true });
         try {
-            // Cargar docente
             const dmQuery = query(collection(db, 'docente_materia'), where('materia_id', '==', materiaId));
             const dmSnap = await getDocs(dmQuery);
             if (!dmSnap.empty) {
@@ -74,39 +101,30 @@ class RegistrarAsistencia extends Component {
                 }
             }
 
-            // Cargar estudiantes
             const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
             const emSnap = await getDocs(emQuery);
-            
-            const estudiantesPromises = emSnap.docs.map(async (emDoc) => {
-                const estudianteId = emDoc.data().estudiante_id;
-                const estSnap = await getDoc(doc(db, 'usuarios', estudianteId));
-                if (estSnap.exists()) {
-                    return { id: estSnap.id, ...estSnap.data() };
-                }
-                return null;
-            });
+            const estudiantesPromises = emSnap.docs.map(emDoc => getDoc(doc(db, 'usuarios', emDoc.data().estudiante_id)));
+            const estudiantesSnaps = await Promise.all(estudiantesPromises);
+            const estudiantesList = estudiantesSnaps.map(snap => snap.exists() ? { id: snap.id, ...snap.data() } : null).filter(Boolean);
 
-            const estudiantesList = (await Promise.all(estudiantesPromises)).filter(Boolean);
-            
-            // Inicializar estado de asistencia para cada estudiante
-            const initialAsistencias = {};
-            estudiantesList.forEach(est => {
-                initialAsistencias[est.id] = 'presente'; // Por defecto, todos presentes
+            this.setState({ estudiantes: estudiantesList }, () => {
+                this.checkAndLoadAsistencia(materiaId, this.state.selectedDate);
             });
-
-            this.setState({ estudiantes: estudiantesList, asistencias: initialAsistencias });
 
         } catch (error) {
-            console.error("Error al cargar detalles de la materia:", error);
-            this.setState({ mensaje: 'Error al cargar los detalles.' });
-        } finally {
-            this.setState({ loadingDetalles: false });
+            console.error("Error al cargar detalles:", error);
+            this.setState({ mensaje: 'Error al cargar los detalles.', loadingDetalles: false });
         }
     }
-    
-    // Cambia el estado de asistencia de un estudiante
+
+    handleDateChange = async (e) => {
+        const newDate = e.target.value;
+        this.setState({ selectedDate: newDate, mensaje: '' });
+        await this.checkAndLoadAsistencia(this.state.selectedMateriaId, newDate);
+    }
+
     handleAsistenciaChange = (estudianteId, estado) => {
+        if (this.state.isAsistenciaRegistrada) return;
         this.setState(prevState => ({
             asistencias: {
                 ...prevState.asistencias,
@@ -115,51 +133,44 @@ class RegistrarAsistencia extends Component {
         }));
     }
 
-    // Guarda los datos en Firestore
     handleGuardarAsistencia = async () => {
-        const { selectedDate, selectedMateriaId, asistencias } = this.state;
+        const { selectedDate, selectedMateriaId, asistencias, isAsistenciaRegistrada } = this.state;
+        if (isAsistenciaRegistrada) {
+            this.setState({ mensaje: 'No se puede guardar, la asistencia ya está registrada.' });
+            return;
+        }
         if (!selectedMateriaId) {
             this.setState({ mensaje: 'Por favor, seleccione una materia.' });
             return;
         }
-        
-        this.setState({ saving: true, mensaje: '' });
 
+        this.setState({ saving: true, mensaje: '' });
         try {
             const savePromises = Object.keys(asistencias).map(estudianteId => {
-                const estado = asistencias[estudianteId];
-                // Usamos un ID de documento predecible para evitar duplicados
                 const docId = `${selectedDate}_${selectedMateriaId}_${estudianteId}`;
                 const asistenciaRef = doc(db, 'asistencias', docId);
-
                 return setDoc(asistenciaRef, {
                     fecha: selectedDate,
                     materia_id: selectedMateriaId,
                     estudiante_id: estudianteId,
-                    estado: estado
+                    estado: asistencias[estudianteId]
                 });
             });
-
             await Promise.all(savePromises);
-            this.setState({ mensaje: 'Asistencia guardada correctamente.' });
-
+            this.setState({ mensaje: 'Asistencia guardada correctamente.', isAsistenciaRegistrada: true, saving: false });
         } catch (error) {
-            console.error("Error al guardar la asistencia:", error);
-            this.setState({ mensaje: 'Error al guardar la asistencia.' });
-        } finally {
-            this.setState({ saving: false });
+            console.error("Error al guardar:", error);
+            this.setState({ mensaje: 'Error al guardar la asistencia.', saving: false });
         }
     }
 
     render() {
-        const { materias, docente, estudiantes, selectedMateriaId, selectedDate, asistencias, loadingDetalles, mensaje, saving } = this.state;
+        const { materias, docente, estudiantes, selectedMateriaId, selectedDate, asistencias, isAsistenciaRegistrada, loadingDetalles, mensaje, saving } = this.state;
 
         return (
             <div className="registrar-asistencia-container">
                 <div className="container-fluid p-4">
                     <h3 className="mb-4">Registrar Asistencia</h3>
-                    
-                    {/* Controles de selección */}
                     <div className="card shadow-sm mb-4 controles-card">
                         <div className="card-body">
                             <div className="row g-3 align-items-end">
@@ -172,10 +183,10 @@ class RegistrarAsistencia extends Component {
                                 </div>
                                 <div className="col-md-5">
                                     <label htmlFor="fecha-select" className="form-label">Fecha</label>
-                                    <input type="date" id="fecha-select" className="form-control" value={selectedDate} onChange={e => this.setState({ selectedDate: e.target.value })} />
+                                    <input type="date" id="fecha-select" className="form-control" value={selectedDate} onChange={this.handleDateChange} />
                                 </div>
                                 <div className="col-md-2">
-                                    <button className="btn btn-primary w-100" onClick={this.handleGuardarAsistencia} disabled={saving || estudiantes.length === 0}>
+                                    <button className="btn btn-primary w-100" onClick={this.handleGuardarAsistencia} disabled={saving || estudiantes.length === 0 || isAsistenciaRegistrada}>
                                         {saving ? 'Guardando...' : 'Guardar'}
                                     </button>
                                 </div>
@@ -184,18 +195,15 @@ class RegistrarAsistencia extends Component {
                         </div>
                     </div>
 
-                    {/* Mensaje de feedback */}
-                    {mensaje && <div className={`alert ${mensaje.includes('Error') ? 'alert-danger' : 'alert-success'} mt-3`}>{mensaje}</div>}
-
-                    {/* Tabla de estudiantes */}
-                    <div className="card shadow-sm">
-                        <div className="card-header">
-                            Lista de Estudiantes ({estudiantes.length})
-                        </div>
+                    {mensaje && <div className={`alert ${mensaje.includes('Error') || mensaje.includes('lectura') ? 'alert-warning' : 'alert-success'} mt-3`}>{mensaje}</div>}
+                    
+                    <div className={`card shadow-sm ${isAsistenciaRegistrada ? 'readonly-mode' : ''}`}>
+                        <div className="card-header">Lista de Estudiantes ({estudiantes.length})</div>
                         <div className="card-body">
-                            {loadingDetalles ? <p>Cargando estudiantes...</p> : (
+                            {loadingDetalles ? <p>Cargando...</p> : (
                                 <div className="table-responsive">
                                     <table className="table table-hover align-middle">
+                                        {/* --- CÓDIGO RESTAURADO --- */}
                                         <thead className="table-light">
                                             <tr>
                                                 <th>Nro</th>
@@ -229,6 +237,7 @@ class RegistrarAsistencia extends Component {
                                                 </tr>
                                             )}
                                         </tbody>
+                                         {/* --- FIN DEL CÓDIGO RESTAURADO --- */}
                                     </table>
                                 </div>
                             )}

@@ -52,3 +52,18 @@
 .table-hover tbody tr:hover {
     background-color: #f1f1f1;
 }
+
+/* ... (estilos existentes) ... */
+
+/* ESTILOS PARA EL MODO SOLO LECTURA */
+.readonly-mode .asistencia-icon {
+    cursor: not-allowed; /* Cambia el cursor para indicar que no es clickeable */
+}
+
+.readonly-mode .asistencia-icon:hover {
+    transform: none; /* Elimina el efecto de zoom al pasar el mouse */
+}
+
+.readonly-mode .asistencia-icon:not(.active) {
+    opacity: 0.2; /* Reduce aún más la opacidad de los íconos no activos */
+}
