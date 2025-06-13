@@ -59,6 +59,28 @@ class ListarUsuarios extends Component {
     }
   }
 
+  // MODIFICADO: Función para mostrar el texto del estado
+  renderEstado = (estado) => {
+    switch (Number(estado)) {
+      case 1: return 'Habilitado';
+      case 2: return 'Deshabilitado';
+      case 3: return 'Habilitado con Observacion';
+      case 4: return 'Deudas Pendientes';
+      default: return 'Desconocido';
+    }
+  }
+  
+  // NUEVO: Función para dar color a cada estado
+  getEstadoClass = (estado) => {
+    switch (Number(estado)) {
+      case 1: return 'bg-success';
+      case 2: return 'bg-danger';
+      case 3: return 'bg-warning text-dark';
+      case 4: return 'bg-info text-dark';
+      default: return 'bg-secondary';
+    }
+  }
+
   render() {
     const { usuarios, filtro, viewUser, editUser, newRole, newEstado } = this.state;
     const texto = filtro.toLowerCase();
@@ -74,9 +96,7 @@ class ListarUsuarios extends Component {
 
     return (
       <>
-  
         <div className="dashboard-layout">
-      
           <main className="main-content listar-usuarios-container">
             <div className="card listar-usuarios-card p-4">
               <h3 className="mb-4">Listado de Usuarios</h3>
@@ -115,7 +135,12 @@ class ListarUsuarios extends Component {
                         <td>{u.carnet_identidad}</td>
                         <td>{u.correo}</td>
                         <td>{u.rol}</td>
-                        <td>{u.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</td>
+                        {/* MODIFICADO: Usamos la nueva función para mostrar el estado con un badge de color */}
+                        <td>
+                          <span className={`badge ${this.getEstadoClass(u.estado)}`}>
+                            {this.renderEstado(u.estado)}
+                          </span>
+                        </td>
                         <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
                         <td>
                           <button className="btn btn-sm btn-outline-info me-2" onClick={() => this.openViewModal(u)}>
@@ -154,7 +179,8 @@ class ListarUsuarios extends Component {
                   <p><strong>CI:</strong> {viewUser.carnet_identidad}</p>
                   <p><strong>Correo:</strong> {viewUser.correo}</p>
                   <p><strong>Rol:</strong> {viewUser.rol}</p>
-                  <p><strong>Estado:</strong> {viewUser.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</p>
+                  {/* MODIFICADO: Usamos la nueva función para mostrar el estado */}
+                  <p><strong>Estado:</strong> {this.renderEstado(viewUser.estado)}</p>
                   <p><strong>Fecha Nac.:</strong> {new Date(viewUser.fecha_nacimiento).toLocaleDateString('es-BO')}</p>
                 </div>
                 <div className="modal-footer">
@@ -185,9 +211,12 @@ class ListarUsuarios extends Component {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Estado</label>
+                    {/* MODIFICADO: Añadimos las nuevas opciones de estado */}
                     <select name="newEstado" value={newEstado} onChange={this.handleEditChange} className="form-select">
                       <option value="1">Habilitado</option>
                       <option value="2">Deshabilitado</option>
+                      <option value="3">Habilitado con Observacion</option>
+                      <option value="4">Deudas Pendientes</option>
                     </select>
                   </div>
                 </div>
