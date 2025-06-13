@@ -1,9 +1,10 @@
-// frontend/src/components/Login.js
+// frontend/src/Components/Login.js
 import React, { Component } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import '../Styles/Login.css';
+import loginIcon from '../assets/logocha.png';
 
 class Login extends Component {
   state = {
@@ -69,7 +70,11 @@ class Login extends Component {
     return (
       <div className="login-container">
         <div className="login-card shadow-lg p-4">
-          <h3 className="mb-4 text-center">Iniciar Sesión</h3>
+
+          <div className="text-center">
+            <img src={loginIcon} alt="Login Icon" className="login-icon mb-4" />
+          </div>
+          <h3 className="mb-4 text-center">Login</h3>
           <form onSubmit={this.handleSubmit} noValidate>
             <div className="form-group mb-3">
               <label>Email</label>

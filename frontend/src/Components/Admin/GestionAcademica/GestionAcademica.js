@@ -1,6 +1,6 @@
 // frontend/src/Components/Admin/GestionAcademica.js
 import React, { Component } from 'react';
-import { BookOpen, UserPlus, UserCheck } from 'lucide-react';
+import { BookOpen, UserPlus, UserCheck, ClipboardList } from 'lucide-react';
 import '../../../Styles/Admin/GestionAcademica.css';
 
 class GestionAcademica extends Component {
@@ -9,7 +9,7 @@ class GestionAcademica extends Component {
   }
 
   renderCard(icon, title, desc, ruta) {
-    return (
+    return ( 
       <div className="col-sm-6 col-md-4">
         <div
           className="card gestion-card h-100 text-center p-4"
@@ -50,6 +50,12 @@ class GestionAcademica extends Component {
                 'Asignar Docente–Materia',
                 'Vincular docentes a las materias.',
                 '/admin/GestionAcademica/AsignarDocenteMateria'
+              )}
+                {this.renderCard(
+                <ClipboardList size={48} className="text-info" />,
+                'Asistencia-Materia',
+                'Lista de asistencia de estudiantes por materia',
+                '/admin/GestionAcademica/AsistenciaMateria/AsistenciaMaterias'
               )}
             </div>
           </div>

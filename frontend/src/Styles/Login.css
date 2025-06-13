@@ -42,3 +42,11 @@
   border-radius: 10px;
   font-size: 14px;
 }
+
+/* 3. Estilos para la imagen */
+.login-icon {
+  width: 150px; /* Ancho deseado */
+  height: 150px; /* Alto deseado */
+  object-fit: cover; /* Para que la imagen no se deforme */
+  border-radius: 30%; /* Opcional: para hacer la imagen circular */
+}
