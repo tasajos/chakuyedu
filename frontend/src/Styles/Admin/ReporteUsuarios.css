@@ -1,0 +1,123 @@
+/* frontend/src/Styles/Admin/ReporteUsuarios.css */
+
+/* --- LAYOUT PRINCIPAL --- */
+.reporte-container {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .reporte-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+/* --- TARJETAS DE ESTADÍSTICAS --- */
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  height: 100%;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: #fff;
+}
+
+.stat-icon.students { background-color: #0d6efd; } /* Azul */
+.stat-icon.teachers { background-color: #198754; } /* Verde */
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-title {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #343a40;
+}
+
+.stat-card.breakdown {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.2rem 0;
+}
+
+/* --- ACORDEÓN DE MATERIAS --- */
+.accordion-container {
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #dee2e6;
+}
+.accordion-item:last-child {
+  border-bottom: none;
+}
+
+.accordion-header {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.accordion-header:hover {
+  background-color: #f8f9fa;
+}
+
+.accordion-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.accordion-chevron {
+  transition: transform 0.3s ease;
+}
+
+.accordion-chevron.open {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+
+.accordion-body .table {
+  background-color: #fff;
+  border-radius: 8px;
+}

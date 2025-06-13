@@ -1,25 +1,55 @@
-.gestion-docente-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
+/* frontend/src/Styles/Admin/GestionDocente.css (CORREGIDO Y MEJORADO) */
+
+/* --- REGLAS DE LAYOUT PARA POSICIONAMIENTO --- */
+.gestion-docente-container {
+  /* Empuja el contenedor para dejar espacio al sidebar de 220px */
+  margin-left: 220px;
+  width: calc(100% - 220px);
+  padding: 2rem;
+  box-sizing: border-box;
 }
+
+/* En móvil, el margen se elimina cuando el sidebar se oculta */
+@media (max-width: 767px) {
+  .gestion-docente-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+/* --- ESTILOS DE LAS TARJETAS (Consistente con los otros componentes) --- */
+.gestion-docente-card {
+  background-color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
 .gestion-docente-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
+
 .icon-container {
   display: inline-flex;
-  padding: 1rem;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: #f5f5f5;
+  background-color: #f8f9fa;
+  margin-bottom: 1rem !important;
 }
+
 .card-title {
   font-weight: 600;
   margin-top: .75rem;
 }
+
 .card-text {
-  color: #555;
-  font-size: .9rem;
+  font-size: 0.9rem;
+  color: #6c757d;
 }

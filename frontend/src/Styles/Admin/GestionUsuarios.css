@@ -1,35 +1,56 @@
-/* frontend/src/components/GestionUsuarios.css */
+/* frontend/src/Styles/Admin/GestionUsuarios.css (CORREGIDO) */
 
+/* --- REGLAS DE LAYOUT PARA POSICIONAMIENTO --- */
+.gestion-usuarios-container {
+  /* Empuja el contenedor para dejar espacio al sidebar de 220px */
+  margin-left: 220px;
+  width: calc(100% - 220px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* En móvil, el margen se elimina cuando el sidebar se oculta */
+@media (max-width: 767px) {
+  .gestion-usuarios-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+/* --- ESTILOS DE LAS TARJETAS (con una pequeña mejora) --- */
 .gestionUsuarios-card {
   background-color: #ffffff;
+  border: none; /* Quitamos el borde para un look más limpio */
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .gestionUsuarios-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .icon-container {
-  display: flex;
+  /* Centrado y con un fondo suave */
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background-color: #f5f5f5;
+  background-color: #f8f9fa; /* Un gris muy claro */
+  margin-bottom: 1rem !important; /* Asegura el espacio inferior */
 }
 
 .card-title {
   font-weight: 600;
-  margin-top: 12px;
+  margin-top: .75rem;
 }
 
 .card-text {
   font-size: 0.9rem;
-  color: #555;
+  color: #6c757d; /* Un gris más suave */
 }

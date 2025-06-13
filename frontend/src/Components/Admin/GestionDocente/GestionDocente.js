@@ -1,6 +1,6 @@
+// frontend/src/components/GestionDocente.js (CORREGIDO)
 import React, { Component } from 'react';
 import { UserCheck, Users, BarChart2 } from 'lucide-react';
-
 import '../../../Styles/Admin/GestionDocente.css';
 
 class GestionDocente extends Component {
@@ -27,38 +27,32 @@ class GestionDocente extends Component {
 
   render() {
     return (
-      <>
-   
-        <div className="dashboard-layout">
-       
-
-          <main className="main-content">
-            <div className="container mt-5">
-              <h2 className="mb-4">Gestión Docente</h2>
-              <div className="row g-4">
-                {this.renderCard(
-                  <UserCheck size={48} className="text-primary" />,
-                  'Crear Docente',
-                  'Registrar nuevos profesores en el sistema.',
-                  '/admin/GestionDocente/CrearDocente'
-                )}
-                {this.renderCard(
-                  <Users size={48} className="text-success" />,
-                  'Listar Docentes',
-                  'Ver, editar y eliminar profesores existentes.',
-                  '/admin/GestionDocente/ListarDocentes'
-                )}
-                {this.renderCard(
-                  <BarChart2 size={48} className="text-warning" />,
-                  'Reporte Docentes',
-                  'Generar reportes de actividad y desempeño.',
-                  '/admin/GestionDocente/ReporteDocentes'
-                )}
-              </div>
-            </div>
-          </main>
+      // Contenedor principal específico para este componente
+      <div className="gestion-docente-container">
+        <div className="container mt-5">
+          <h2 className="mb-4">Gestión Docente</h2>
+          <div className="row g-4 justify-content-center">
+            {this.renderCard(
+              <UserCheck size={48} className="text-primary" />,
+              'Crear Docente',
+              'Registrar nuevos profesores en el sistema.',
+              '/admin/GestionDocente/CrearDocente'
+            )}
+            {this.renderCard(
+              <Users size={48} className="text-success" />,
+              'Listar Docentes',
+              'Ver, editar y eliminar profesores existentes.',
+              '/admin/GestionDocente/ListarDocentes'
+            )}
+            {this.renderCard(
+              <BarChart2 size={48} className="text-warning" />,
+              'Reporte Docentes',
+              'Generar reportes de actividad y desempeño.',
+              '/admin/GestionDocente/ReporteDocentes'
+            )}
+          </div>
         </div>
-      </>
+      </div>
     );
   }
 }
