@@ -1,8 +1,7 @@
-// frontend/src/Components/Admin/GestionUsuarios/ListarUsuarios.js
 import React, { Component } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
-import { Eye, Edit2 } from 'lucide-react';
+import { Eye, Edit2, Search } from 'lucide-react';
 import '../../../Styles/Admin/ListarUsuarios.css';
 
 class ListarUsuarios extends Component {
@@ -59,7 +58,6 @@ class ListarUsuarios extends Component {
     }
   }
 
-  // MODIFICADO: Función para mostrar el texto del estado
   renderEstado = (estado) => {
     switch (Number(estado)) {
       case 1: return 'Habilitado';
@@ -70,7 +68,6 @@ class ListarUsuarios extends Component {
     }
   }
   
-  // NUEVO: Función para dar color a cada estado
   getEstadoClass = (estado) => {
     switch (Number(estado)) {
       case 1: return 'bg-success';
@@ -81,6 +78,21 @@ class ListarUsuarios extends Component {
     }
   }
 
+  getInitials = (nombre, apellido) => {
+    const n = nombre ? nombre[0] : '';
+    const a = apellido ? apellido[0] : '';
+    return `${n}${a}`.toUpperCase();
+  }
+
+  generateColorForId = (id) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return "#" + "00000".substring(0, 6 - c.length) + c;
+  }
+
   render() {
     const { usuarios, filtro, viewUser, editUser, newRole, newEstado } = this.state;
     const texto = filtro.toLowerCase();
@@ -88,85 +100,81 @@ class ListarUsuarios extends Component {
       this.safe(u.nombre).includes(texto) ||
       this.safe(u.apellido_paterno).includes(texto) ||
       this.safe(u.apellido_materno).includes(texto) ||
-      this.safe(u.telefono).includes(texto) ||
-      this.safe(u.carnet_identidad).includes(texto) ||
       this.safe(u.correo).includes(texto) ||
       this.safe(u.rol).includes(texto)
     );
 
     return (
-      <>
-        <div className="dashboard-layout">
-          <main className="main-content listar-usuarios-container">
-            <div className="card listar-usuarios-card p-4">
-              <h3 className="mb-4">Listado de Usuarios</h3>
-              <div className="mb-3">
-                <input
-                  type="text"
-                  placeholder="Filtrar por nombre, apellidos, CI, correo o rol..."
-                  className="form-control"
-                  value={filtro}
-                  onChange={this.handleFiltroChange}
-                />
-              </div>
-              <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead className="table-primary">
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Apellido Paterno</th>
-                      <th>Apellido Materno</th>
-                      <th>Teléfono</th>
-                      <th>CI</th>
-                      <th>Correo</th>
-                      <th>Rol</th>
-                      <th>Estado</th>
-                      <th>Fecha de Nac.</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtrados.map(u => (
-                      <tr key={u.id}>
-                        <td>{u.nombre}</td>
-                        <td>{u.apellido_paterno}</td>
-                        <td>{u.apellido_materno}</td>
-                        <td>{u.telefono}</td>
-                        <td>{u.carnet_identidad}</td>
-                        <td>{u.correo}</td>
-                        <td>{u.rol}</td>
-                        {/* MODIFICADO: Usamos la nueva función para mostrar el estado con un badge de color */}
-                        <td>
-                          <span className={`badge ${this.getEstadoClass(u.estado)}`}>
-                            {this.renderEstado(u.estado)}
-                          </span>
-                        </td>
-                        <td>{new Date(u.fecha_nacimiento).toLocaleDateString('es-BO')}</td>
-                        <td>
-                          <button className="btn btn-sm btn-outline-info me-2" onClick={() => this.openViewModal(u)}>
-                            <Eye size={16}/> Ver
-                          </button>
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => this.openEditModal(u)}>
-                            <Edit2 size={16}/> Modificar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {filtrados.length === 0 && (
-                      <tr>
-                        <td colSpan="10" className="text-center">No hay usuarios que coincidan.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </main>
+      <div className="listar-usuarios-container">
+        <div className="card listar-usuarios-card p-4">
+          <h3 className="mb-4">Listado de Usuarios</h3>
+          
+          <div className="mb-4 filter-container">
+            <Search className="filter-icon" size={18} />
+            <input
+              type="text"
+              placeholder="Filtrar usuarios..."
+              className="form-control"
+              value={filtro}
+              onChange={this.handleFiltroChange}
+            />
+          </div>
+
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>CI</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtrados.map(u => (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="user-info">
+                        <div className="user-avatar" style={{ backgroundColor: this.generateColorForId(u.id) }}>
+                          {this.getInitials(u.nombre, u.apellido_paterno)}
+                        </div>
+                        <div>
+                          <div className="user-name">{u.nombre} {u.apellido_paterno}</div>
+                          <div className="user-email">{u.correo}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{u.carnet_identidad}</td>
+                    <td>{u.rol}</td>
+                    <td>
+                      <span className={`badge ${this.getEstadoClass(u.estado)}`}>
+                        {this.renderEstado(u.estado)}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <button className="btn btn-sm btn-outline-info" onClick={() => this.openViewModal(u)}>
+                        <Eye size={16}/> Ver
+                      </button>
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => this.openEditModal(u)}>
+                        <Edit2 size={16}/> Modificar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filtrados.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="text-center py-5">No hay usuarios que coincidan.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* View Modal */}
         {viewUser && (
-          <div className="modal fade show d-block" tabIndex="-1">
+          <div className="modal fade show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
@@ -179,7 +187,6 @@ class ListarUsuarios extends Component {
                   <p><strong>CI:</strong> {viewUser.carnet_identidad}</p>
                   <p><strong>Correo:</strong> {viewUser.correo}</p>
                   <p><strong>Rol:</strong> {viewUser.rol}</p>
-                  {/* MODIFICADO: Usamos la nueva función para mostrar el estado */}
                   <p><strong>Estado:</strong> {this.renderEstado(viewUser.estado)}</p>
                   <p><strong>Fecha Nac.:</strong> {new Date(viewUser.fecha_nacimiento).toLocaleDateString('es-BO')}</p>
                 </div>
@@ -193,7 +200,7 @@ class ListarUsuarios extends Component {
 
         {/* Edit Modal */}
         {editUser && (
-          <div className="modal fade show d-block" tabIndex="-1">
+          <div className="modal fade show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
@@ -211,7 +218,6 @@ class ListarUsuarios extends Component {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Estado</label>
-                    {/* MODIFICADO: Añadimos las nuevas opciones de estado */}
                     <select name="newEstado" value={newEstado} onChange={this.handleEditChange} className="form-select">
                       <option value="1">Habilitado</option>
                       <option value="2">Deshabilitado</option>
@@ -228,7 +234,7 @@ class ListarUsuarios extends Component {
             </div>
           </div>
         )}
-      </>
+      </div>
     );
   }
 }

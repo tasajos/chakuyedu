@@ -1,31 +1,143 @@
-/* frontend/src/Styles/Admin/ListarUsuarios.css */
+/* frontend/src/Styles/Admin/ListarUsuarios.css (VERSIÓN FINAL) */
 
-/* Layout para que la tabla quede bajo la navbar y junto a la sidebar */
-.dashboard-layout {
-  display: flex;
-}
-
-.main-content {
-  margin-left: 200px;      /* ancho de la sidebar */
-  margin-top: 56px;        /* altura de la navbar */
-  width: calc(100% - 200px);
-  min-height: calc(100vh - 56px);
-}
-
-/* Contenedor específico del listado */
+/* --- CONTENEDOR PRINCIPAL: AQUÍ ESTÁ LA SOLUCIÓN CLAVE --- */
 .listar-usuarios-container {
-  padding: 2rem;
-  background-color: #f8f9fa;
+  /* Empuja el contenedor 220px a la derecha para dejar espacio al sidebar */
+  margin-left: 220px; 
+  
+  /* Opcional pero recomendado: ajusta el ancho para que no se desborde */
+  width: calc(100% - 220px); 
+
+  /* Padding interno para que el contenido no se pegue a los bordes */
+  padding: 1.5rem; 
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
 }
 
+/* --- MANEJO RESPONSIVE --- */
+/* En pantallas móviles (cuando el sidebar se oculta), quitamos el margen */
+@media (max-width: 767px) {
+  .listar-usuarios-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem; /* Un poco menos de padding en móvil */
+  }
+}
+
+
+/* --- Estilos de la Tarjeta y Filtro --- */
 .listar-usuarios-card {
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   background: #ffffff;
+  border: none;
 }
 
-/* Altura fija con scroll para la tabla */
+.filter-container {
+  position: relative;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.filter-container .form-control {
+  padding-left: 40px;
+  border-radius: 8px;
+}
+
+/* --- Estilos de la Tabla (Versión más compacta) --- */
 .table-responsive {
-  max-height: 60vh;
+  max-height: 65vh;
   overflow-y: auto;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 2px; /* AÚN MÁS COMPACTO: Mínimo espacio entre filas */
+}
+
+.table thead th {
+  background-color: #f8f9fa !important;
+  color: #6c757d;
+  border: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem; /* Letra de encabezado más pequeña */
+  letter-spacing: 0.5px;
+  padding: 0.6rem 1rem; /* Padding reducido */
+}
+
+.table tbody tr {
+  background-color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa; /* Efecto hover más sutil */
+}
+
+.table tbody td {
+  padding: 0.6rem 1rem; /* Padding reducido para filas más cortas */
+  vertical-align: middle;
+  border-top: 1px solid #f1f1f1; /* Líneas separadoras más sutiles */
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.table tbody tr td:first-child {
+  border-left: 1px solid #f1f1f1;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.table tbody tr td:last-child {
+  border-right: 1px solid #f1f1f1;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+
+/* --- Avatar y Celdas --- */
+.user-avatar {
+  width: 32px;  /* Más pequeño */
+  height: 32px; /* Más pequeño */
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-right: 10px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-info .user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #343a40;
+}
+
+.user-info .user-email {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions-cell .btn {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
 }
