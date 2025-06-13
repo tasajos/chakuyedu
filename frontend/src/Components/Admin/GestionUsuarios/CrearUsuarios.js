@@ -101,7 +101,7 @@ class CrearUsuario extends Component {
     return (
       <div className="crear-usuario-container">
         <div className="card crear-usuario-card p-4">
-          <h3 className="mb-4 text-center">Crear Usuario</h3>
+          <h3 className="mb-4 text-center">Registrar Usuario</h3>
           <form onSubmit={this.handleSubmit}>
             <div className="row gx-3 mb-3">
               <div className="col-md-6">
