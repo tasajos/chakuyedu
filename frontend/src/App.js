@@ -20,6 +20,7 @@ import ListarDocentes from './Components/Admin/GestionDocente/ListarDocentes';
 import AsignarEstudiantes from './Components/Admin/GestionAcademica/AsignarEstudiantes';
 import AsignarDocenteMateria from './Components/Admin/GestionAcademica/AsignarDocenteMateria';
 import AsistenciaMaterias from './Components/Admin/GestionAcademica/AsistenciaMateria/AsistenciaMaterias';
+import RegistrarAsistencia from './Components/Admin/GestionAcademica/AsistenciaMateria/RegistrarAsistencia';
 import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDocentes';
 import axios from 'axios';
 
@@ -166,6 +167,13 @@ function App() {
         </ProtectedRoute>
         }/>
 
+ <Route path="/admin/GestionAcademica/AsistenciaMateria/RegistrarAsistencia" element={
+        <ProtectedRoute rolPermitido="admin">
+        <SidebarMenu />
+        <Navbar />
+        <RegistrarAsistencia />
+        </ProtectedRoute>
+        }/>
 
 
 

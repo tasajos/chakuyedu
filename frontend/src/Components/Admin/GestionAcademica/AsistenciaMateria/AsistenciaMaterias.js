@@ -43,7 +43,7 @@ class AsistenciaMateria extends Component {
                 <CheckSquare size={48} className="text-success" />,
                 'Registrar Asistencia',
                 'Marcar la asistencia de los estudiantes para una fecha específica.',
-                '/admin/asistencia/registrar' // Ruta sugerida
+                '/admin/GestionAcademica/AsistenciaMateria/RegistrarAsistencia' // Ruta sugerida
               )}
 
               {/* Card 2: Listado de Asistencia */}
