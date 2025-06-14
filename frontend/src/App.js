@@ -25,6 +25,7 @@ import RegistrarAsistencia from './Components/Admin/GestionAcademica/AsistenciaM
 import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDocentes';
 //Docentes
 import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
+import ListaDmateria from './Components/Docente/GestionMateria/ListaEstudiantesMateria';
 import axios from 'axios';
 
 
@@ -204,7 +205,7 @@ function App() {
           </ProtectedRoute>
         }/>
 
-          <Route path="/docente/GestionMateria/GestionMaterias.js"    element={
+          <Route path="/docente/GestionMateria/GestionMaterias"    element={
           
          <ProtectedRoute rolPermitido="docente">
            <Navbar />
@@ -214,6 +215,16 @@ function App() {
           </ProtectedRoute>
         }/>
 
+          <Route 
+  path="/docente/materia/:materiaId" // <-- 1. RUTA DINÁMICA
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      {/* 2. El componente ListaDmateria ya incluye su propio SidebarMenu y layout */}
+      <ListaDmateria />
+    </ProtectedRoute>
+  }
+/>
         
         
 

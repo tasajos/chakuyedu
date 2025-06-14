@@ -1,25 +1,12 @@
 import React, { Component } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../firebase'; // Asegúrate que la ruta a tu config de firebase sea correcta
+
 import SidebarMenu from '../../SidebarMenu';
 import { BookMarked } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import '../../../Styles/Docente/GestionMaterias.css';
-
-// --- SIMULACIÓN DE DATOS ---
-// En una aplicación real, estos datos vendrían de tu base de datos (API).
-
-// 1. SIMULAMOS UN USUARIO LOGUEADO
-const mockCurrentUser = {
-  userId: 'docente001',
-  nombre: 'Carlos Zúñiga'
-};
-
-// 2. SIMULAMOS UNA LISTA COMPLETA DE MATERIAS DE LA BASE DE DATOS
-const mockTodasLasMaterias = [
-  { id: 'mat01', nombre: 'Cálculo I', descripcion: 'Fundamentos del cálculo diferencial e integral.', docenteId: 'docente001', color: '#3b82f6' },
-  { id: 'mat02', nombre: 'Álgebra Lineal', descripcion: 'Vectores, matrices y espacios vectoriales.', docenteId: 'docente002', color: '#10b981' },
-  { id: 'mat03', nombre: 'Programación Avanzada', descripcion: 'Patrones de diseño y estructuras de datos complejas.', docenteId: 'docente001', color: '#f97316' },
-  { id: 'mat04', nombre: 'Física II', descripcion: 'Electromagnetismo y principios de termodinámica.', docenteId: 'docente003', color: '#8b5cf6' },
-  { id: 'mat05', nombre: 'Bases de Datos', descripcion: 'Diseño, modelado y consulta de bases de datos relacionales.', docenteId: 'docente001', color: '#ef4444' }
-];
 
 class GestionMaterias extends Component {
   constructor(props) {
@@ -27,23 +14,73 @@ class GestionMaterias extends Component {
     this.state = {
       materiasAsignadas: [],
       loading: true,
-      error: null
+      error: null,
+      currentUser: null,
     };
+    this.authSubscription = null; // Para guardar la suscripción de auth
   }
 
   componentDidMount() {
-    // 3. SIMULAMOS LA "LLAMADA A LA API"
-    // Usamos un setTimeout para simular el tiempo de espera de una red.
-    setTimeout(() => {
-      try {
-        const materiasDelDocente = mockTodasLasMaterias.filter(
-          materia => materia.docenteId === mockCurrentUser.userId
-        );
-        this.setState({ materiasAsignadas: materiasDelDocente, loading: false });
-      } catch (e) {
-        this.setState({ error: 'No se pudieron cargar las materias.', loading: false });
+    const auth = getAuth();
+    // Escuchamos cambios en el estado de autenticación
+    this.authSubscription = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Si hay un usuario logueado, lo guardamos y buscamos sus materias
+        this.setState({ currentUser: user });
+        this.fetchMaterias(user.uid);
+      } else {
+        // Si no hay usuario, limpiamos el estado
+        this.setState({ currentUser: null, loading: false, error: 'Debe iniciar sesión para ver sus materias.' });
       }
-    }, 1000); // 1 segundo de espera simulado
+    });
+  }
+
+  componentWillUnmount() {
+    // Es importante cancelar la suscripción al desmontar el componente para evitar memory leaks
+    if (this.authSubscription) {
+      this.authSubscription();
+    }
+  }
+
+  // Método para obtener las materias desde Firestore
+  fetchMaterias = async (docenteId) => {
+    this.setState({ loading: true, error: null });
+    try {
+      // 1. Buscar en 'docente_materia' las asignaciones para el docente actual
+      const dmQuery = query(collection(db, 'docente_materia'), where('docente_id', '==', docenteId));
+      const dmSnap = await getDocs(dmQuery);
+
+      if (dmSnap.empty) {
+        // Si no hay asignaciones, terminamos la carga
+        this.setState({ loading: false, materiasAsignadas: [] });
+        return;
+      }
+
+      // 2. Por cada asignación, obtener los detalles de la materia
+      const materiasPromises = dmSnap.docs.map(async (dmDoc) => {
+        const materiaId = dmDoc.data().materia_id;
+        const matRef = doc(db, 'materias', materiaId);
+        const matSnap = await getDoc(matRef);
+
+        if (matSnap.exists()) {
+          // Devolvemos un objeto con el id y los datos de la materia
+          return { id: matSnap.id, ...matSnap.data() };
+        }
+        return null; // En caso de que una materia haya sido borrada
+      });
+      
+      const materiasCompletas = await Promise.all(materiasPromises);
+      
+      // Filtramos cualquier resultado nulo y actualizamos el estado
+      this.setState({
+        materiasAsignadas: materiasCompletas.filter(m => m !== null),
+        loading: false,
+      });
+
+    } catch (e) {
+      console.error("Error al obtener las materias: ", e);
+      this.setState({ error: 'No se pudieron cargar las materias.', loading: false });
+    }
   }
 
   render() {
@@ -66,13 +103,17 @@ class GestionMaterias extends Component {
               materiasAsignadas.length > 0 ? (
                 <div className="materias-grid">
                   {materiasAsignadas.map(materia => (
-                    <div className="materia-card" key={materia.id} style={{ '--materia-color': materia.color }}>
-                      <div className="card-icon">
-                        <BookMarked size={24} />
+
+
+                   <Link to={`/docente/materia/${materia.id}`} key={materia.id} className="text-decoration-none">
+                      <div className="materia-card" style={{ '--materia-color': materia.color || '#3b82f6' }}>
+                        <div className="card-icon">
+                          <BookMarked size={24} />
+                        </div>
+                        <h5 className="card-title">{materia.nombre}</h5>
+                        <p className="card-description">{materia.descripcion}</p>
                       </div>
-                      <h5 className="card-title">{materia.nombre}</h5>
-                      <p className="card-description">{materia.descripcion}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -85,5 +126,4 @@ class GestionMaterias extends Component {
     );
   }
 }
-
 export default GestionMaterias;

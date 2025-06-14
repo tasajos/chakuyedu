@@ -35,7 +35,7 @@ class DocenteDashboard extends Component {
               <BookOpen size={48} className="text-primary"/>,
               'Gestión Materias',
               'Crear y actualizar la información de materias.',
-              '/docente/GestionMateria/GestionMaterias.js'
+              '/docente/GestionMateria/GestionMaterias'
             )}
             {this.renderCard(
               <Users size={48} className="text-success"/>,

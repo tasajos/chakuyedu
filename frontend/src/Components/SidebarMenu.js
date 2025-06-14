@@ -19,7 +19,7 @@ const menuConfig = {
     { icon: BarChart2,   label: 'Informes',            to: '/admin/informes' },
   ],
   docente: [
-    { icon: BookOpen,    label: 'Gestión Materias',     to: '/docente/materias' },
+    { icon: BookOpen,    label: 'Gestión Materias',     to: '/docente/GestionMateria/GestionMaterias' },
     { icon: Users,       label: 'Gestión Estudiantes',  to: '/docente/estudiantes' },
     { icon: UserCheck,   label: 'Gestión Académica',    to: '/docente/academica' },
     { icon: User,        label: 'Perfil',               to: '/docente/perfil' },

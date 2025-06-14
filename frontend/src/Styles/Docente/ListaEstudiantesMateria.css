@@ -1,0 +1,12 @@
+.lista-estudiantes-container .card-header {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.lista-estudiantes-container .table {
+    margin-bottom: 0;
+}
+
+.lista-estudiantes-container .table th {
+    font-weight: 600;
+}
