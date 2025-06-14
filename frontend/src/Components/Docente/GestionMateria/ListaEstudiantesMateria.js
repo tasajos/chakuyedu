@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '../../../firebase';
 
 import SidebarMenu from '../../SidebarMenu';
-import { Users, CalendarPlus } from 'lucide-react';
+import { Users, CalendarPlus,ClipboardPlus  } from 'lucide-react';
 import '../../../Styles/Docente/ListaEstudiantesMateria.css';
 
 class ListaEstudiantesMateria extends Component {
@@ -84,15 +84,26 @@ class ListaEstudiantesMateria extends Component {
                   <h2 className="mb-1">{materia.nombre}</h2>
                   <p className="text-muted mb-0">Lista de estudiantes inscritos</p>
                 </div>
-                <Link
-                  to="/Docente/GestionMateria/DocenteRegistrarAsistencia"
-                  state={{ selectedMateriaId: materiaId }}
-                  className="btn btn-primary d-flex align-items-center"
-                >
-                  <CalendarPlus size={18} className="me-2" />
-                  Registrar Asistencia
-                </Link>
-              </div>
+
+
+                 <div className="d-flex gap-2"> {/* Envolvemos los botones en un div para agruparlos */}
+        <Link
+            to={`/docente/materia/${materiaId}/asignar-tarea`} // <-- NUEVA RUTA
+            className="btn btn-info d-flex align-items-center"
+        >
+            <ClipboardPlus size={18} className="me-2" />
+            Asignar Tarea
+        </Link>
+        <Link
+            to="/docente/asistencia"
+            state={{ selectedMateriaId: materiaId }}
+            className="btn btn-primary d-flex align-items-center"
+        >
+            <CalendarPlus size={18} className="me-2" />
+            Registrar Asistencia
+        </Link>
+    </div>
+</div>
 
               <div className="card shadow-sm mt-4">
                 <div className="card-header d-flex justify-content-between align-items-center">
