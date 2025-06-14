@@ -197,6 +197,7 @@ function App() {
          <ProtectedRoute rolPermitido="docente">
            <Navbar />
             <DocenteDashboard  />
+              <SidebarMenu />
             {/*<Logout />*/}
           </ProtectedRoute>
         }/>

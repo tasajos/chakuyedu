@@ -1,16 +1,41 @@
-/* Basado en AdminDashboard.css, colores adaptados */
+/* --- 1. REGLAS DE LAYOUT (Idénticas a las del Admin) --- */
+
+.dashboard-layout {
+  position: relative;
+}
+
+/* El contenido principal DEBE tener un margen para dejar espacio al sidebar */
+.main-content {
+  /* Asumiendo que tu SidebarMenu mide 220px de ancho */
+  margin-left: 220px; 
+  width: calc(100% - 220px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* En móvil, cuando el sidebar se oculta, eliminamos el margen */
+@media (max-width: 767px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+
+/* --- 2. ESTILOS DE LAS TARJETAS (Como en la sugerencia anterior) --- */
 
 .docente-card {
   background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: #333;
 }
 
-.docente-card:hover {
+a.text-decoration-none:hover .docente-card {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .icon-container {
@@ -21,8 +46,12 @@
   height: 72px;
   margin: 0 auto;
   border-radius: 50%;
-  background-color: #f5f5f5;
 }
+
+.icon-container.bg-primary { background-color: rgba(var(--bs-primary-rgb), 0.1); }
+.icon-container.bg-success { background-color: rgba(var(--bs-success-rgb), 0.1); }
+.icon-container.bg-info { background-color: rgba(var(--bs-info-rgb), 0.1); }
+.icon-container.bg-warning { background-color: rgba(var(--bs-warning-rgb), 0.1); }
 
 .card-title {
   font-weight: 600;
