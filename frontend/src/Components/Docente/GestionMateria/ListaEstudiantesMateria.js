@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 
 import SidebarMenu from '../../SidebarMenu';
-import { Users } from 'lucide-react';
+import { Users, CalendarPlus } from 'lucide-react';
 import '../../../Styles/Docente/ListaEstudiantesMateria.css';
 
 class ListaEstudiantesMateria extends Component {
@@ -19,7 +19,6 @@ class ListaEstudiantesMateria extends Component {
   }
 
   componentDidMount() {
-    // Obtenemos el ID de la materia desde los parámetros de la URL
     const { materiaId } = this.props.params;
     if (materiaId) {
       this.fetchMateriaYEstudiantes(materiaId);
@@ -31,7 +30,6 @@ class ListaEstudiantesMateria extends Component {
   fetchMateriaYEstudiantes = async (materiaId) => {
     this.setState({ loading: true, error: null });
     try {
-      // 1. Obtener los detalles de la materia para mostrar el nombre
       const matRef = doc(db, 'materias', materiaId);
       const matSnap = await getDoc(matRef);
       if (matSnap.exists()) {
@@ -40,7 +38,6 @@ class ListaEstudiantesMateria extends Component {
         throw new Error('La materia no fue encontrada.');
       }
 
-      // 2. Buscar en 'estudiante_materia' los estudiantes inscritos
       const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
       const emSnap = await getDocs(emQuery);
       
@@ -49,7 +46,6 @@ class ListaEstudiantesMateria extends Component {
         return;
       }
 
-      // 3. Por cada inscripción, obtener los detalles del estudiante desde 'usuarios'
       const estudiantesPromises = emSnap.docs.map(async (emDoc) => {
         const estudianteId = emDoc.data().estudiante_id;
         const userRef = doc(db, 'usuarios', estudianteId);
@@ -72,6 +68,7 @@ class ListaEstudiantesMateria extends Component {
 
   render() {
     const { loading, error, materia, estudiantes } = this.state;
+    const { materiaId } = this.props.params;
 
     return (
       <div className="dashboard-layout">
@@ -82,12 +79,22 @@ class ListaEstudiantesMateria extends Component {
 
           {!loading && !error && materia && (
             <div className="lista-estudiantes-container">
-              <div className="gestion-header">
-                <h2 className="mb-1">{materia.nombre}</h2>
-                <p className="text-muted">Lista de estudiantes inscritos</p>
+              <div className="gestion-header d-flex justify-content-between align-items-center">
+                <div>
+                  <h2 className="mb-1">{materia.nombre}</h2>
+                  <p className="text-muted mb-0">Lista de estudiantes inscritos</p>
+                </div>
+                <Link
+                  to="/Docente/GestionMateria/DocenteRegistrarAsistencia"
+                  state={{ selectedMateriaId: materiaId }}
+                  className="btn btn-primary d-flex align-items-center"
+                >
+                  <CalendarPlus size={18} className="me-2" />
+                  Registrar Asistencia
+                </Link>
               </div>
 
-              <div className="card shadow-sm">
+              <div className="card shadow-sm mt-4">
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <span>
                     <Users size={18} className="me-2" />
@@ -135,11 +142,17 @@ class ListaEstudiantesMateria extends Component {
   }
 }
 
-// HOC para pasar los parámetros de la URL a un componente de clase
-// eslint-disable-next-line import/no-anonymous-default-export
-export default (props) => (
-  <ListaEstudiantesMateria
-    {...props}
-    params={useParams()}
-  />
-);
+// === SECCIÓN CORREGIDA ===
+// HOC para pasar los parámetros de la URL a un componente de clase.
+// Se reescribe como una función con nombre para máxima compatibilidad y claridad.
+function ListaEstudiantesMateriaConRouter(props) {
+  return (
+    <ListaEstudiantesMateria
+      {...props}
+      params={useParams()}
+    />
+  );
+}
+
+export default ListaEstudiantesMateriaConRouter;
+// === FIN DE LA CORRECCIÓN ===

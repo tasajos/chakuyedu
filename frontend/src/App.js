@@ -26,6 +26,7 @@ import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDoce
 //Docentes
 import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
 import ListaDmateria from './Components/Docente/GestionMateria/ListaEstudiantesMateria';
+import DocenteRegistrarAsistencia from './Components/Docente/GestionMateria/DocenteRegistrarAsistencia';
 import axios from 'axios';
 
 
@@ -226,6 +227,17 @@ function App() {
   }
 />
         
+
+<Route 
+  path="/docente/GestionMateria/DocenteRegistrarAsistencia" 
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      <DocenteRegistrarAsistencia />
+    </ProtectedRoute>
+  } 
+/>
+
         
 
          {/*ESTUDIANTES

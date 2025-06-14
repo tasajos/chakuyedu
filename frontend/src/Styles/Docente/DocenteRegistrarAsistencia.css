@@ -1,0 +1,42 @@
+/* Puedes copiar el contenido de Styles/Admin/RegistrarAsistencia.css aquí, */
+/* omitiendo las reglas de .registrar-asistencia-container como margin-left, etc. */
+/* ya que el layout principal ya lo maneja. */
+
+.controles-card {
+    background-color: #ffffff;
+    border: none;
+}
+
+.asistencia-icon {
+    cursor: pointer;
+    margin: 0 8px;
+    opacity: 0.3;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    width: 24px;
+    height: 24px;
+}
+
+.asistencia-icon:hover {
+    opacity: 0.7;
+    transform: scale(1.1);
+}
+
+.asistencia-icon.active {
+    opacity: 1;
+}
+
+.asistencia-icon.presente.active { color: #198754; }
+.asistencia-icon.ausente.active { color: #dc3545; }
+.asistencia-icon.permiso.active { color: #0d6efd; }
+
+.readonly-mode .asistencia-icon {
+    cursor: not-allowed;
+}
+
+.readonly-mode .asistencia-icon:hover {
+    transform: none;
+}
+
+.readonly-mode .asistencia-icon:not(.active) {
+    opacity: 0.2;
+}
