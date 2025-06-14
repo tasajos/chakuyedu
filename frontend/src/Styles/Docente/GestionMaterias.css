@@ -1,0 +1,53 @@
+/* Contenedor principal de la sección de materias */
+.materias-container {
+  margin-top: 1.5rem;
+}
+
+/* Grid para las tarjetas de materias */
+.materias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Estilo individual de cada tarjeta */
+.materia-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  border-top: 5px solid var(--materia-color, #dee2e6); /* Color dinámico */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.materia-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.materia-card .card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--materia-color, #dee2e6);
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.materia-card .card-title {
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.materia-card .card-description {
+  font-size: 0.9rem;
+  color: #555;
+  flex-grow: 1; /* Asegura que las tarjetas tengan la misma altura */
+}

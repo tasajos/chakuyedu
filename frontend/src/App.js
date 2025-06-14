@@ -23,6 +23,8 @@ import AsignarDocenteMateria from './Components/Admin/GestionAcademica/AsignarDo
 import AsistenciaMaterias from './Components/Admin/GestionAcademica/AsistenciaMateria/AsistenciaMaterias';
 import RegistrarAsistencia from './Components/Admin/GestionAcademica/AsistenciaMateria/RegistrarAsistencia';
 import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDocentes';
+//Docentes
+import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
 import axios from 'axios';
 
 
@@ -201,8 +203,24 @@ function App() {
             {/*<Logout />*/}
           </ProtectedRoute>
         }/>
+
+          <Route path="/docente/GestionMateria/GestionMaterias.js"    element={
+          
+         <ProtectedRoute rolPermitido="docente">
+           <Navbar />
+            <Gdmateria  />
+              <SidebarMenu />
+            {/*<Logout />*/}
+          </ProtectedRoute>
+        }/>
+
         
         
+
+         {/*ESTUDIANTES
+             
+             
+             */}
 
         <Route path="/estudiante" element={
           <ProtectedRoute rolPermitido="estudiante">
