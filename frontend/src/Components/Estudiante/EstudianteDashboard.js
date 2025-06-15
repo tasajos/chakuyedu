@@ -34,7 +34,7 @@ class EstudianteDashboard extends Component {
               <BookOpen size={48} className="text-primary" />,
               'Materias',
               'Ver las materias en las que estás inscrito.',
-              '/estudiante/materias'
+              '/Estudiante/GestionMateria/EstudianteMateria'
             )}
             {this.renderCard(
               <User size={48} className="text-success" />,

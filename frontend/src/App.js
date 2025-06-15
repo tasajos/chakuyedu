@@ -33,7 +33,8 @@ import SistemaAcademico from './Components/Docente/GestionAcademica/SistemaAcade
 import CalificacionFinal from './Components/Docente/GestionAcademica/CalificacionFinal';
 import PerfilDocente from './Components/Docente/PerfilDocente/PerfilDocentes';
 import axios from 'axios';
-
+//Estudiante
+import EstudianteMaterias from './Components/Estudiante/GestionMateria/EstudianteMateria';
 
 // Estos son placeholders, 
 /*const Admin = () => <h2>Panel Admin</h2>;
@@ -308,6 +309,15 @@ function App() {
             {/*<Logout />*/}
           </ProtectedRoute>
         }/>
+
+      <Route path="/Estudiante/GestionMateria/EstudianteMateria" element={
+      <ProtectedRoute rolPermitido="estudiante">
+      <Navbar /> {/* Asumiendo una barra de navegación para estudiantes */}
+      <EstudianteMaterias />
+    </ProtectedRoute>
+      }/>
+
+
       </Routes>
     </Router>
   );
