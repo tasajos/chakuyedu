@@ -53,7 +53,7 @@ class DocenteDashboard extends Component {
               <User size={48} className="text-warning"/>,
               'Perfil',
               'Ver y editar tu perfil de docente.',
-              '/docente/perfil'
+              '/Docente/PerfilDocente/PerfilDocentes'
             )}
           </div>
         </main>

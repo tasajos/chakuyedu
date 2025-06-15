@@ -31,6 +31,7 @@ import AsignarTarea from './Components/Docente/GestionMateria/AsignarTarea';
 import SeguimientoEstudiante from './Components/Docente/GestionEstudiante/SeguimientoEstudiante';
 import SistemaAcademico from './Components/Docente/GestionAcademica/SistemaAcademico';
 import CalificacionFinal from './Components/Docente/GestionAcademica/CalificacionFinal';
+import PerfilDocente from './Components/Docente/PerfilDocente/PerfilDocentes';
 import axios from 'axios';
 
 
@@ -278,6 +279,17 @@ function App() {
     <ProtectedRoute rolPermitido="docente">
       <Navbar />
       <CalificacionFinal />
+    </ProtectedRoute>
+  } 
+/>
+
+
+<Route 
+  path="/Docente/PerfilDocente/PerfilDocentes" 
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      <PerfilDocente />
     </ProtectedRoute>
   } 
 />
