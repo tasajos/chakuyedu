@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Login from './Components/Login';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Logout from './Components/Logout';
 import ProtectedRoute from './Components/ProtectedRoute';
 import AdminDashboard from './Components/Admin/AdminDashboard';

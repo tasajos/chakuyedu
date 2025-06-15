@@ -4,7 +4,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,7 +15,7 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+
   width: 90%;
   max-width: 600px;
   animation: slide-down 0.3s ease-out;

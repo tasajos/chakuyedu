@@ -3,7 +3,8 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
-import Modal from '../../Utils/Modal';
+import Modal from '../../Utils/Modal'; // Usamos nuestro nuevo Modal basado en Bootstrap
+import { Button } from 'react-bootstrap'; // Importamos el botón de react-bootstrap
 import { ClipboardList, FileWarning } from 'lucide-react';
 import '../../../Styles/Estudiante/EstudianteTareas.css';
 
@@ -109,6 +110,7 @@ class EstudianteTareas extends Component {
         fecha_entrega_estudiante: serverTimestamp()
       });
       
+      // Actualizar el estado local para reflejar el cambio en la UI sin recargar
       this.setState(prevState => {
         const nuevasTareasAgrupadas = { ...prevState.tareasAgrupadas };
         const materiaKey = selectedTask.materiaNombre;
@@ -121,6 +123,7 @@ class EstudianteTareas extends Component {
       this.handleCloseModal();
     } catch (error) {
       console.error("Error al entregar la tarea:", error);
+      // Aquí podrías manejar un estado de error para el modal
     } finally {
       this.setState({ isSubmitting: false });
     }
@@ -130,7 +133,6 @@ class EstudianteTareas extends Component {
     const { loading, error, tareasAgrupadas, isModalOpen, selectedTask, entregaMetodo, isSubmitting } = this.state;
 
     return (
-      // El return principal ahora envuelve TODO
       <div className="dashboard-layout">
         <SidebarMenu />
         <main className="main-content">
@@ -183,24 +185,22 @@ class EstudianteTareas extends Component {
           </div>
         </main>
 
-        {/* --- CORRECCIÓN CLAVE --- */}
-        {/* El Modal se renderiza aquí, al mismo nivel que <main>. */}
-        {/* El componente Modal se encargará de mostrarse u ocultarse por sí mismo. */}
         <Modal
-          isOpen={isModalOpen}
-          onClose={this.handleCloseModal}
+          show={isModalOpen}
+          onHide={this.handleCloseModal}
           title={`Entregar Tarea: ${selectedTask?.titulo}`}
           footer={
             <>
-              <button type="button" className="btn btn-secondary" onClick={this.handleCloseModal}>Cancelar</button>
-              <button 
-                type="button" 
-                className="btn btn-primary" 
+              <Button variant="secondary" onClick={this.handleCloseModal}>
+                Cancelar
+              </Button>
+              <Button 
+                variant="primary" 
                 onClick={this.handleEntregarTarea}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Confirmando...' : 'Confirmar Entrega'}
-              </button>
+              </Button>
             </>
           }
         >
@@ -232,7 +232,6 @@ class EstudianteTareas extends Component {
       </div>
     );
   }
-  }
- // <--- Esta es la llave correcta que cierra la clase
+}
 
-export default EstudianteTareas; // La exportación va después del cierre de la clase
+export default EstudianteTareas;

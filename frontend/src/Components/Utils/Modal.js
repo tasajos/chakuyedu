@@ -1,26 +1,23 @@
 import React from 'react';
-import '../../Styles/Utils/Modal.css';
-import { X } from 'lucide-react';
+import { Modal as BootstrapModal, Button } from 'react-bootstrap';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) {
-    return null;
-  }
-
+// Este componente ahora usa las props estándar de react-bootstrap:
+// show (en vez de isOpen), onHide (en vez de onClose)
+const Modal = ({ show, onHide, title, children, footer }) => {
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h5 className="modal-title">{title}</h5>
-          <button type="button" className="btn-close" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-        <div className="modal-body">
-          {children}
-        </div>
-      </div>
-    </div>
+    <BootstrapModal show={show} onHide={onHide} centered>
+      <BootstrapModal.Header closeButton>
+        <BootstrapModal.Title>{title}</BootstrapModal.Title>
+      </BootstrapModal.Header>
+      <BootstrapModal.Body>
+        {children}
+      </BootstrapModal.Body>
+      {footer && (
+        <BootstrapModal.Footer>
+          {footer}
+        </BootstrapModal.Footer>
+      )}
+    </BootstrapModal>
   );
 };
 
