@@ -1,0 +1,13 @@
+.lista-calificaciones .card-header h5 {
+    font-size: 1.1rem;
+}
+
+.lista-calificaciones .card-body {
+    background-color: #fdfdff;
+}
+
+.lista-calificaciones .form-label-plaintext {
+    font-weight: 500;
+    color: #333;
+    padding-top: 0.5rem; /* Alinear mejor con el input */
+}

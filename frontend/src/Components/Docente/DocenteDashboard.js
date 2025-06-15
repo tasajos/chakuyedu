@@ -47,7 +47,7 @@ class DocenteDashboard extends Component {
               <ClipboardList size={48} className="text-info"/>,
               'Gestión Académica',
               'Planificación académica y seguimiento.',
-              '/docente/academica'
+              '/Docente/GestionAcademica/SistemaAcademico'
             )}
             {this.renderCard(
               <User size={48} className="text-warning"/>,

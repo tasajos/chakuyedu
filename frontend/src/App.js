@@ -29,6 +29,7 @@ import ListaDmateria from './Components/Docente/GestionMateria/ListaEstudiantesM
 import DocenteRegistrarAsistencia from './Components/Docente/GestionMateria/DocenteRegistrarAsistencia';
 import AsignarTarea from './Components/Docente/GestionMateria/AsignarTarea';
 import SeguimientoEstudiante from './Components/Docente/GestionEstudiante/SeguimientoEstudiante';
+import SistemaAcademico from './Components/Docente/GestionAcademica/SistemaAcademico';
 import axios from 'axios';
 
 
@@ -256,6 +257,16 @@ function App() {
     <ProtectedRoute rolPermitido="docente">
       <Navbar />
       <SeguimientoEstudiante />
+    </ProtectedRoute>
+  } 
+/>
+
+<Route 
+  path="/Docente/GestionAcademica/SistemaAcademico" 
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      <SistemaAcademico />
     </ProtectedRoute>
   } 
 />
