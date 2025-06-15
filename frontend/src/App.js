@@ -28,6 +28,7 @@ import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
 import ListaDmateria from './Components/Docente/GestionMateria/ListaEstudiantesMateria';
 import DocenteRegistrarAsistencia from './Components/Docente/GestionMateria/DocenteRegistrarAsistencia';
 import AsignarTarea from './Components/Docente/GestionMateria/AsignarTarea';
+import SeguimientoEstudiante from './Components/Docente/GestionEstudiante/SeguimientoEstudiante';
 import axios from 'axios';
 
 
@@ -247,6 +248,16 @@ function App() {
       <AsignarTarea />
     </ProtectedRoute>
   }
+/>
+
+<Route 
+  path="/Docente/GestionEstudiante/SeguimientoEstudiante" 
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      <SeguimientoEstudiante />
+    </ProtectedRoute>
+  } 
 />
 
         

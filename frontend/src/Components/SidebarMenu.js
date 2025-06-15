@@ -20,7 +20,7 @@ const menuConfig = {
   ],
   docente: [
     { icon: BookOpen,    label: 'Gestión Materias',     to: '/docente/GestionMateria/GestionMaterias' },
-    { icon: Users,       label: 'Gestión Estudiantes',  to: '/docente/estudiantes' },
+    { icon: Users,       label: 'Gestión Estudiantes',  to: '/Docente/GestionEstudiante/SeguimientoEstudiante' },
     { icon: UserCheck,   label: 'Gestión Académica',    to: '/docente/academica' },
     { icon: User,        label: 'Perfil',               to: '/docente/perfil' },
   ],

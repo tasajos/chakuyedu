@@ -1,0 +1,11 @@
+.actions-cell {
+    min-width: 320px; /* Asegura que todos los botones quepan en una línea */
+}
+
+.actions-cell .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem; /* Espacio entre el ícono y el texto */
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}

@@ -41,7 +41,7 @@ class DocenteDashboard extends Component {
               <Users size={48} className="text-success"/>,
               'Gestión Estudiantes',
               'Ver y gestionar la lista de estudiantes.',
-              '/docente/estudiantes'
+              '/docente/GestionEstudiante/SeguimientoEstudiante'
             )}
             {this.renderCard(
               <ClipboardList size={48} className="text-info"/>,
