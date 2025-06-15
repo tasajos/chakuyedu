@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, getDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../../firebase';
-
+import { Link } from 'react-router-dom'; 
 import SidebarMenu from '../../SidebarMenu';
 import { BookCheck } from 'lucide-react';
 import '../../../Styles/Docente/SistemaAcademico.css';
@@ -191,8 +191,14 @@ class SistemaAcademico extends Component {
         <SidebarMenu />
         <main className="main-content">
           <div className="container-fluid p-4">
-            <h3 className="mb-4">Sistema de Calificaciones</h3>
+          
             
+             <div className="d-flex justify-content-between align-items-center mb-4">
+      <h3 className="mb-0">Sistema de Calificaciones</h3>
+      <Link to="/Docente/GestionAcademica/CalificacionFinal" className="btn btn-success">
+        Ir a Calificaciones Finales
+      </Link>
+    </div>
             <div className="card shadow-sm mb-4">
               <div className="card-body">
                 <label htmlFor="materia-select" className="form-label fw-bold">Seleccione una Materia</label>

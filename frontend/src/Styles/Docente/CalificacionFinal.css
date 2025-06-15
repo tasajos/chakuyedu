@@ -1,0 +1,8 @@
+.table input[type="number"].form-control-sm {
+    max-width: 100px;
+    margin: 0 auto;
+}
+
+.table .fw-bold {
+    font-size: 1.1rem;
+}
