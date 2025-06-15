@@ -37,7 +37,7 @@ import axios from 'axios';
 import EstudianteMaterias from './Components/Estudiante/GestionMateria/EstudianteMateria';
 import EstudianteMateriaDetalle from './Components/Estudiante/GestionMateria/EstudianteMateriaDetalle';
 import PerfilEstudiante from './Components/Estudiante/PerfilEstudiante/PerfilEstudiantes';
-
+import EstudianteTareas from './Components/Estudiante/ExamenesyTareas/EstudianteTareas';
 
 // Estos son placeholders, 
 /*const Admin = () => <h2>Panel Admin</h2>;
@@ -334,6 +334,15 @@ function App() {
       <PerfilEstudiante />
     </ProtectedRoute>
   } />
+
+<Route path="/Estudiante/ExamenesyTareas/EstudianteTareas" element={
+    <ProtectedRoute rolPermitido="estudiante">
+      <Navbar />
+      <EstudianteTareas />
+    </ProtectedRoute>
+  } 
+/>
+
 
 
       </Routes>
