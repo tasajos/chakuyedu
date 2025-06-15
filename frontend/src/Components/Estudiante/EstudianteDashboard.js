@@ -40,7 +40,7 @@ class EstudianteDashboard extends Component {
               <User size={48} className="text-success" />,
               'Perfil',
               'Revisa y edita tu información personal.',
-              '/estudiante/perfil'
+              '/Estudiante/PerfilEstudiante/PerfilEstudiantes'
             )}
             {this.renderCard(
               <FileText size={48} className="text-info" />,
