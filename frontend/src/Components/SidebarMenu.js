@@ -27,7 +27,7 @@ const menuConfig = {
   estudiante: [
     { icon: BookOpen,    label: 'Materias',             to: '/Estudiante/GestionMateria/EstudianteMateria' },
     { icon: User,        label: 'Perfil',               to: '/Estudiante/PerfilEstudiante/PerfilEstudiantes' },
-    { icon: FileText,    label: 'Exámenes',             to: '/estudiante/examenes' },
+    { icon: FileText,    label: 'Exámenes y Tareas',             to: '/estudiante/examenes' },
     { icon: Award,       label: 'Certificados',         to: '/estudiante/certificados' },
   ]
 };

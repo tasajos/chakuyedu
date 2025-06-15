@@ -44,7 +44,7 @@ class EstudianteDashboard extends Component {
             )}
             {this.renderCard(
               <FileText size={48} className="text-info" />,
-              'Exámenes',
+              'Exámenes y Tareas',
               'Accede a tus exámenes y prácticas.',
               '/estudiante/examenes'
             )}
