@@ -5,31 +5,33 @@ import { db } from '../../../firebase';
 import { Link } from 'react-router-dom';
 
 import SidebarMenu from '../../SidebarMenu';
-import { BookCopy, CheckSquare, Edit, Smile } from 'lucide-react';
+import Modal from '../../Utils/Modal'; // Usamos nuestro wrapper de react-bootstrap
+import { Button } from 'react-bootstrap'; // Importamos el botón de react-bootstrap
+import { BookCopy, CheckSquare, Smile } from 'lucide-react';
 import '../../../Styles/Docente/SeguimientoEstudiante.css';
-import Modal from '../../Utils/Modal'; // Importa el nuevo componente Modal
-
 
 class SeguimientoEstudiante extends Component {
   state = {
+    // Datos cargados
     materiasAsignadas: [],
     tareasDisponibles: [],
     estudiantes: [],
+    // Estado de la UI
     selectedMateriaId: '',
     selectedTareaId: '',
+    // Estados de carga y mensajes
     loadingMaterias: true,
     loadingTareas: true,
     loadingEstudiantes: false,
     mensaje: '',
     error: '',
     currentUser: null,
-
-     // === NUEVO ESTADO PARA EL MODAL ===
+    // Estado para el Modal
     isModalOpen: false,
     modalType: '', // 'notas' o 'comportamiento'
     selectedStudent: null,
     observacion: '',
-    comportamientoSeleccionado: '', // Para el dropdown de comportamiento
+    comportamientoSeleccionado: '',
     isSavingRegistro: false,
   };
 
@@ -81,8 +83,84 @@ class SeguimientoEstudiante extends Component {
     }
   }
 
+  handleMateriaChange = async (e) => {
+    const materiaId = e.target.value;
+    this.setState({ selectedMateriaId: materiaId, estudiantes: [], mensaje: '', error: '' });
+    if (!materiaId) return;
 
- handleOpenModal = (student, type) => {
+    this.setState({ loadingEstudiantes: true });
+    try {
+      const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
+      const emSnap = await getDocs(emQuery);
+      const estudiantesPromises = emSnap.docs.map(emDoc => getDoc(doc(db, 'usuarios', emDoc.data().estudiante_id)));
+      const estudiantesSnaps = await Promise.all(estudiantesPromises);
+      const estudiantesList = estudiantesSnaps.map(snap => snap.exists() ? { id: snap.id, ...snap.data() } : null).filter(Boolean);
+      this.setState({ estudiantes: estudiantesList, loadingEstudiantes: false });
+    } catch (error) {
+      this.setState({ error: 'Error al cargar los estudiantes.', loadingEstudiantes: false });
+    }
+  }
+
+  handleTareaChange = (e) => {
+    this.setState({ selectedTareaId: e.target.value });
+  }
+
+  handleAsignarTarea = async (estudianteId = null) => {
+    const { selectedTareaId, selectedMateriaId, currentUser, estudiantes } = this.state;
+    if (!selectedTareaId) {
+      this.setState({ error: 'Por favor, seleccione una tarea para asignar.' });
+      return;
+    }
+    const targets = estudianteId ? [estudiantes.find(e => e.id === estudianteId)] : estudiantes;
+    if (!targets[0]) {
+      this.setState({ error: 'Estudiante no encontrado.' });
+      return;
+    }
+    this.setState({ mensaje: 'Verificando y asignando tarea(s)...', error: '' });
+    try {
+      const batch = writeBatch(db);
+      const yaAsignados = [];
+      const nuevosAsignados = [];
+      for (const est of targets) {
+        const q = query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', est.id), where('tarea_id', '==', selectedTareaId));
+        const existingAssignmentSnap = await getDocs(q);
+        if (existingAssignmentSnap.empty) {
+          const newAsignacionRef = doc(collection(db, 'estudiante_tarea'));
+          batch.set(newAsignacionRef, {
+            estudiante_id: est.id,
+            tarea_id: selectedTareaId,
+            materia_id: selectedMateriaId,
+            docente_id: currentUser.uid,
+            estado: 'pendiente',
+            fecha_asignacion: serverTimestamp(),
+            calificacion: null,
+            feedback_docente: ''
+          });
+          nuevosAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
+        } else {
+          yaAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
+        }
+      }
+      if (nuevosAsignados.length > 0) {
+        await batch.commit();
+      }
+      let successMsg = '';
+      let errorMsg = '';
+      if (nuevosAsignados.length > 0) {
+        successMsg = `Tarea asignada correctamente a: ${nuevosAsignados.join(', ')}.`;
+      }
+      if (yaAsignados.length > 0) {
+        errorMsg = `La tarea ya estaba asignada a: ${yaAsignados.join(', ')}.`;
+      }
+      this.setState({ mensaje: successMsg, error: errorMsg });
+    } catch (error) {
+      console.error("Error al asignar tarea(s):", error);
+      this.setState({ error: 'No se pudo completar la asignación.', mensaje: '' });
+    }
+  }
+  
+  // --- Lógica del Modal (sin cambios) ---
+  handleOpenModal = (student, type) => {
     this.setState({
       isModalOpen: true,
       modalType: type,
@@ -109,9 +187,7 @@ class SeguimientoEstudiante extends Component {
   handleSaveRegistro = async () => {
     const { modalType, selectedStudent, observacion, comportamientoSeleccionado, currentUser, selectedMateriaId } = this.state;
     if (!selectedStudent) return;
-
     this.setState({ isSavingRegistro: true, error: '', mensaje: '' });
-
     try {
       let collectionName = '';
       let dataToSave = {
@@ -122,7 +198,6 @@ class SeguimientoEstudiante extends Component {
         observacion: observacion || '',
         createdAt: serverTimestamp(),
       };
-
       if (modalType === 'notas') {
         collectionName = 'registros_notas';
       } else if (modalType === 'comportamiento') {
@@ -131,15 +206,12 @@ class SeguimientoEstudiante extends Component {
       } else {
         throw new Error("Tipo de registro no válido");
       }
-
       await addDoc(collection(db, collectionName), dataToSave);
-
       this.setState({
         mensaje: `Registro de ${modalType} guardado correctamente.`,
         isSavingRegistro: false,
       });
-      this.handleCloseModal(); // Cierra el modal después de guardar
-
+      this.handleCloseModal();
     } catch (e) {
       console.error(`Error guardando registro de ${modalType}:`, e);
       this.setState({
@@ -149,107 +221,10 @@ class SeguimientoEstudiante extends Component {
     }
   }
 
-
-  handleMateriaChange = async (e) => {
-    const materiaId = e.target.value;
-    this.setState({ selectedMateriaId: materiaId, estudiantes: [], mensaje: '', error: '' });
-
-    if (!materiaId) return;
-
-    this.setState({ loadingEstudiantes: true });
-    try {
-      const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
-      const emSnap = await getDocs(emQuery);
-      const estudiantesPromises = emSnap.docs.map(emDoc => getDoc(doc(db, 'usuarios', emDoc.data().estudiante_id)));
-      const estudiantesSnaps = await Promise.all(estudiantesPromises);
-      const estudiantesList = estudiantesSnaps.map(snap => snap.exists() ? { id: snap.id, ...snap.data() } : null).filter(Boolean);
-      this.setState({ estudiantes: estudiantesList, loadingEstudiantes: false });
-    } catch (error) {
-      this.setState({ error: 'Error al cargar los estudiantes.', loadingEstudiantes: false });
-    }
-  }
-
-  handleTareaChange = (e) => {
-    this.setState({ selectedTareaId: e.target.value });
-  }
-  
-  // === MÉTODO ACTUALIZADO ===
-  handleAsignarTarea = async (estudianteId = null) => {
-    const { selectedTareaId, selectedMateriaId, currentUser, estudiantes } = this.state;
-    if (!selectedTareaId) {
-      this.setState({ error: 'Por favor, seleccione una tarea para asignar.' });
-      return;
-    }
-
-    const targets = estudianteId ? [estudiantes.find(e => e.id === estudianteId)] : estudiantes;
-    if (!targets[0]) {
-      this.setState({ error: 'Estudiante no encontrado.' });
-      return;
-    }
-    
-    this.setState({ mensaje: 'Verificando y asignando tarea(s)...', error: '' });
-
-    try {
-      const batch = writeBatch(db);
-      const yaAsignados = [];
-      const nuevosAsignados = [];
-
-      for (const est of targets) {
-        const q = query(
-          collection(db, 'estudiante_tarea'),
-          where('estudiante_id', '==', est.id),
-          where('tarea_id', '==', selectedTareaId)
-        );
-        const existingAssignmentSnap = await getDocs(q);
-
-        if (existingAssignmentSnap.empty) {
-          const newAsignacionRef = doc(collection(db, 'estudiante_tarea'));
-          batch.set(newAsignacionRef, {
-            estudiante_id: est.id,
-            tarea_id: selectedTareaId,
-            materia_id: selectedMateriaId,
-            docente_id: currentUser.uid,
-            estado: 'pendiente',
-            fecha_asignacion: serverTimestamp(),
-            calificacion: null,
-            feedback_docente: ''
-          });
-          nuevosAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
-        } else {
-          yaAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
-        }
-      }
-
-      if (nuevosAsignados.length > 0) {
-        await batch.commit();
-      }
-
-      let successMsg = '';
-      let errorMsg = '';
-
-      if (nuevosAsignados.length > 0) {
-        successMsg = `Tarea asignada correctamente a: ${nuevosAsignados.join(', ')}.`;
-      }
-      if (yaAsignados.length > 0) {
-        errorMsg = `La tarea ya estaba asignada a: ${yaAsignados.join(', ')}.`;
-      }
-
-      this.setState({ mensaje: successMsg, error: errorMsg });
-
-    } catch (error) {
-      console.error("Error al asignar tarea(s):", error);
-      this.setState({ error: 'No se pudo completar la asignación.', mensaje: '' });
-    }
-  }
-
-
-
   render() {
     const { materiasAsignadas, tareasDisponibles, estudiantes, selectedMateriaId, selectedTareaId, loadingMaterias, loadingTareas, loadingEstudiantes, mensaje, error,
-
-        isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro 
-    
-     } = this.state;
+      isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro 
+    } = this.state;
 
     return (
       <div className="dashboard-layout">
@@ -272,8 +247,7 @@ class SeguimientoEstudiante extends Component {
               <>
                 <div className="card shadow-sm mb-4">
                   <div className="card-header">
-                    <BookCopy size={18} className="me-2" />
-                    Asignar Tarea a la Clase
+                    <BookCopy size={18} className="me-2" /> Asignar Tarea a la Clase
                   </div>
                   <div className="card-body">
                     <div className="row g-2 align-items-end">
@@ -311,23 +285,22 @@ class SeguimientoEstudiante extends Component {
                             </tr>
                           </thead>
                           <tbody>
-                        {estudiantes.length > 0 ? estudiantes.map((est, i) => (
-                            <tr key={est.id}>
+                            {estudiantes.length > 0 ? estudiantes.map((est, i) => (
+                              <tr key={est.id}>
                                 <td>{i + 1}</td>
                                 <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
                                 <td>{est.correo}</td>
                                 <td className="text-center actions-cell">
-                                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
-                                    {/* --- BOTONES ACTUALIZADOS --- */}
-                                    <button onClick={() => this.handleOpenModal(est, 'notas')} className="btn btn-sm btn-outline-success me-1"><CheckSquare size={16} /> Notas</button>
-                                    <button onClick={() => this.handleOpenModal(est, 'comportamiento')} className="btn btn-sm btn-outline-warning"><Smile size={16} /> Comportamiento</button>
+                                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
+                                  <button onClick={() => this.handleOpenModal(est, 'notas')} className="btn btn-sm btn-outline-success me-1"><CheckSquare size={16} /> Notas</button>
+                                  <button onClick={() => this.handleOpenModal(est, 'comportamiento')} className="btn btn-sm btn-outline-warning"><Smile size={16} /> Comportamiento</button>
                                 </td>
-                            </tr>
-                        )) : (
-                            <tr><td colSpan="4" className="text-center text-muted p-4">No hay estudiantes en esta materia.</td></tr>
-                        )}
-                    </tbody>
-                </table>
+                              </tr>
+                            )) : (
+                              <tr><td colSpan="4" className="text-center text-muted p-4">No hay estudiantes en esta materia.</td></tr>
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     )}
                   </div>
@@ -336,60 +309,56 @@ class SeguimientoEstudiante extends Component {
             )}
           </div>
         </main>
+        
+        {/* --- MODAL ACTUALIZADO PARA USAR REACT-BOOTSTRAP --- */}
+        <Modal
+          show={isModalOpen}
+          onHide={this.handleCloseModal}
+          title={`Registrar ${modalType === 'notas' ? 'Nota' : 'Comportamiento'} para ${selectedStudent?.nombre}`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={this.handleCloseModal}>Cancelar</Button>
+              <Button
+                variant="primary"
+                onClick={this.handleSaveRegistro}
+                disabled={isSavingRegistro}
+              >
+                {isSavingRegistro ? 'Guardando...' : 'Guardar Registro'}
+              </Button>
+            </>
+          }
+        >
+          {modalType === 'comportamiento' && (
+            <div className="mb-3">
+              <label htmlFor="comportamientoSeleccionado" className="form-label">Nivel de Comportamiento</label>
+              <select
+                className="form-select"
+                id="comportamientoSeleccionado"
+                name="comportamientoSeleccionado"
+                value={comportamientoSeleccionado}
+                onChange={this.handleModalInputChange}
+              >
+                <option value="">-- Seleccionar nivel --</option>
+                <option value="Comportamiento Malo">Comportamiento Malo</option>
+                <option value="Muy Bueno">Muy Bueno</option>
+                <option value="Excelente">Excelente</option>
+              </select>
+            </div>
+          )}
 
-{/* === RENDERIZADO DEL MODAL === */}
-            <Modal
-              isOpen={isModalOpen}
-              onClose={this.handleCloseModal}
-              title={`Registrar ${modalType === 'notas' ? 'Nota' : 'Comportamiento'} para ${selectedStudent?.nombre}`}
-            >
-              {modalType === 'comportamiento' && (
-                <div className="mb-3">
-                  <label htmlFor="comportamientoSeleccionado" className="form-label">Nivel de Comportamiento</label>
-                  <select
-                    className="form-select"
-                    id="comportamientoSeleccionado"
-                    name="comportamientoSeleccionado"
-                    value={comportamientoSeleccionado}
-                    onChange={this.handleModalInputChange}
-                  >
-                    <option value="">-- Seleccionar nivel --</option>
-                    <option value="Comportamiento Malo">Comportamiento Malo</option>
-                    <option value="Muy Bueno">Muy Bueno</option>
-                    <option value="Excelente">Excelente</option>
-                  </select>
-                </div>
-              )}
-
-              <div className="mb-3">
-                <label htmlFor="observacion" className="form-label">Observaciones (Opcional)</label>
-                <textarea
-                  className="form-control"
-                  id="observacion"
-                  name="observacion"
-                  rows="4"
-                  value={observacion}
-                  onChange={this.handleModalInputChange}
-                  placeholder="Escriba aquí sus observaciones..."
-                ></textarea>
-              </div>
-
-              <div className="d-flex justify-content-end gap-2">
-                <button type="button" className="btn btn-secondary" onClick={this.handleCloseModal}>Cancelar</button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={this.handleSaveRegistro}
-                  disabled={isSavingRegistro}
-                >
-                  {isSavingRegistro ? 'Guardando...' : 'Guardar Registro'}
-                </button>
-              </div>
-            </Modal>
-
-
-
-
+          <div className="mb-3">
+            <label htmlFor="observacion" className="form-label">Observaciones (Opcional)</label>
+            <textarea
+              className="form-control"
+              id="observacion"
+              name="observacion"
+              rows="4"
+              value={observacion}
+              onChange={this.handleModalInputChange}
+              placeholder="Escriba aquí sus observaciones..."
+            ></textarea>
+          </div>
+        </Modal>
       </div>
     );
   }
