@@ -52,7 +52,7 @@ class EstudianteDashboard extends Component {
               <Award size={48} className="text-warning" />,
               'Certificados',
               'Descarga tus certificados y badges.',
-              '/estudiante/certificados'
+              '/Estudiante/Certificados/EstudiantesCertificados'
             )}
           </div>
         </div>
