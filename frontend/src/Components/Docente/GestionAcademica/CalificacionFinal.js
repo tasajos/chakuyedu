@@ -5,6 +5,11 @@ import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
 import '../../../Styles/Docente/CalificacionFinal.css';
 
+// Importaciones para el PDF
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Download } from 'lucide-react'; // Ícono para el botón
+
 class CalificacionFinal extends Component {
   state = {
     materiasAsignadas: [],
@@ -18,6 +23,7 @@ class CalificacionFinal extends Component {
     mensaje: '',
     error: '',
     currentUser: null,
+    docenteData: null, // Para guardar los datos del docente
   };
 
   authSubscription = null;
@@ -28,6 +34,7 @@ class CalificacionFinal extends Component {
       if (user) {
         this.setState({ currentUser: user });
         this.loadMisMaterias(user.uid);
+        this.loadDocenteData(user.uid); // Cargar datos del docente
       } else {
         this.setState({ loadingMaterias: false, error: 'Debe iniciar sesión.' });
       }
@@ -36,6 +43,14 @@ class CalificacionFinal extends Component {
 
   componentWillUnmount() {
     if (this.authSubscription) this.authSubscription();
+  }
+
+  loadDocenteData = async (docenteId) => {
+    const docRef = doc(db, 'usuarios', docenteId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        this.setState({ docenteData: docSnap.data() });
+    }
   }
 
   loadMisMaterias = async (docenteId) => {
@@ -160,9 +175,62 @@ class CalificacionFinal extends Component {
         this.setState({ isSaving: false, error: 'Ocurrió un error al guardar las notas.' });
     }
   }
+  
+  handleGenerarInforme = () => {
+    const { estudiantes, calificaciones, selectedMateriaId, materiasAsignadas, docenteData } = this.state;
+    if (!selectedMateriaId || estudiantes.length === 0) return;
+
+    const materiaActual = materiasAsignadas.find(m => m.id === selectedMateriaId);
+    const docenteNombre = docenteData ? `${docenteData.nombre} ${docenteData.apellido_paterno}` : 'N/A';
+    
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Acta de Calificaciones Finales", 105, 20, { align: 'center' });
+    
+    doc.setFontSize(11);
+    doc.text(`Facultad: ${materiaActual?.facultad || 'No especificada'}`, 14, 35);
+    doc.text(`Materia: ${materiaActual?.nombre || 'N/A'}`, 14, 42);
+    doc.text(`Docente: ${docenteNombre}`, 14, 49);
+    doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-BO')}`, 196, 49, { align: 'right'});
+
+    const tableColumn = ["Nro", "Estudiante", "CI", "Tareas (5%)", "Teoría (40%)", "Práctica (50%)", "Asist. (5%)", "Nota Final"];
+    const tableRows = [];
+
+    estudiantes.forEach((est, index) => {
+        const notas = calificaciones[est.id] || {};
+        const pondTareas = (notas.promedioTareas || 0) * 0.05;
+        const notaFinal = this.calcularNotaFinal(est.id);
+        
+        const rowData = [
+            index + 1,
+            `${est.apellido_paterno} ${est.apellido_materno}, ${est.nombre}`,
+            est.carnet_identidad,
+            pondTareas.toFixed(2),
+            notas.notaTeoria || 0,
+            notas.notaPractica || 0,
+            notas.notaAsistencia || 0,
+            { content: notaFinal, styles: { fontStyle: 'bold' } }
+        ];
+        tableRows.push(rowData);
+    });
+
+autoTable(doc, {head: [tableColumn], // Los encabezados van dentro de un array
+  body: tableRows,
+  startY: 60
+});
+    
+    const finalY = doc.lastAutoTable.finalY || 100;
+    doc.setFontSize(11);
+    doc.text("______________________", 105, finalY + 30, { align: 'center'});
+    doc.text(`Firma del Docente`, 105, finalY + 37, { align: 'center'});
+    doc.text(docenteNombre, 105, finalY + 44, { align: 'center' });
+
+    doc.save(`acta_notas_${materiaActual.nombre.replace(/ /g, '_')}.pdf`);
+  }
 
   render() {
-    const { materiasAsignadas, estudiantes, calificaciones, selectedMateriaId, loadingMaterias, loadingDetalles, isSaving, mensaje, error } = this.state;
+    const { materiasAsignadas, estudiantes, calificaciones, selectedMateriaId, loadingMaterias, loadingDetalles, isSaving, mensaje, error, notasOriginales } = this.state;
 
     return (
       <div className="dashboard-layout">
@@ -171,7 +239,6 @@ class CalificacionFinal extends Component {
           <div className="container-fluid p-4">
             <h3 className="mb-4">Registro de Calificaciones Finales</h3>
             
-            {/* === SECCIÓN CORREGIDA === */}
             <div className="card shadow-sm mb-4">
               <div className="card-body">
                 <label htmlFor="materia-select-final" className="form-label fw-bold">Seleccione una Materia</label>
@@ -191,12 +258,11 @@ class CalificacionFinal extends Component {
                 </select>
               </div>
             </div>
-            {/* === FIN DE LA SECCIÓN CORREGIDA === */}
 
-            {mensaje && <div className="alert alert-success">{mensaje}</div>}
-            {error && <div className="alert alert-danger">{error}</div>}
+            {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
+            {error && <div className="alert alert-danger mt-3">{error}</div>}
 
-            {selectedMateriaId && (loadingDetalles ? <p>Cargando...</p> :
+            {selectedMateriaId && (loadingDetalles ? <p>Cargando datos académicos...</p> :
               <div className="card shadow-sm">
                 <div className="card-body p-0">
                   <div className="table-responsive">
@@ -215,7 +281,7 @@ class CalificacionFinal extends Component {
                         {estudiantes.map(est => {
                           const notas = calificaciones[est.id] || {};
                           const notaFinal = this.calcularNotaFinal(est.id);
-                          const isDisabled = this.state.notasOriginales[est.id]?.isSaved;
+                          const isDisabled = notasOriginales[est.id]?.isSaved;
                           return (
                             <tr key={est.id}>
                               <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
@@ -231,7 +297,11 @@ class CalificacionFinal extends Component {
                     </table>
                   </div>
                 </div>
-                <div className="card-footer text-end">
+                <div className="card-footer d-flex justify-content-end gap-2">
+                  <button className="btn btn-secondary" onClick={this.handleGenerarInforme} disabled={estudiantes.length === 0}>
+                    <Download size={16} className="me-2" />
+                    Generar Informe
+                  </button>
                   <button className="btn btn-primary" onClick={this.handleGuardarNotas} disabled={isSaving || estudiantes.length === 0}>
                     {isSaving ? 'Guardando...' : 'Guardar Todas las Notas'}
                   </button>
