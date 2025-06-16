@@ -95,7 +95,7 @@ class ListaEstudiantesMateria extends Component {
             Asignar Tarea
         </Link>
         <Link
-            to="/docente/asistencia"
+            to="/docente/GestionMateria/DocenteRegistrarAsistencia"
             state={{ selectedMateriaId: materiaId }}
             className="btn btn-primary d-flex align-items-center"
         >
