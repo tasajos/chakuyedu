@@ -28,7 +28,7 @@ class AdminDashboard extends Component {
           <h2 className="mb-4">Panel de Administración</h2>
           <div className="row row-cols-1 row-cols-md-2 g-4">
             {this.renderCard(<Settings size={32} className="text-primary"/>,
-              'Mantenimiento','Parámetros y configuraciones.','/admin/mantenimiento')}
+              'Mantenimiento','Parámetros y configuraciones.','/admin/GestionMantenimiento/Mantenimiento')}
             {this.renderCard(<Users size={32} className="text-success"/>,
               'Gestión Usuarios','Crear y editar cuentas.','/admin/GestionUsuarios/GestionUsuarios')}
             {this.renderCard(<UserCheck size={32} className="text-warning"/>,

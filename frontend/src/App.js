@@ -24,6 +24,8 @@ import AsignarDocenteMateria from './Components/Admin/GestionAcademica/AsignarDo
 import AsistenciaMaterias from './Components/Admin/GestionAcademica/AsistenciaMateria/AsistenciaMaterias';
 import RegistrarAsistencia from './Components/Admin/GestionAcademica/AsistenciaMateria/RegistrarAsistencia';
 import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDocentes';
+import Mantenimiento from './Components/Admin/GestionMantenimiento/Mantenimiento';
+
 //Docentes
 import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
 import ListaDmateria from './Components/Docente/GestionMateria/ListaEstudiantesMateria';
@@ -197,6 +199,16 @@ function App() {
         <RegistrarAsistencia />
         </ProtectedRoute>
         }/>
+
+
+         <Route path="/admin/GestionMantenimiento/Mantenimiento" element={
+        <ProtectedRoute rolPermitido="admin">
+        <SidebarMenu />
+        <Navbar />
+        <Mantenimiento />
+        </ProtectedRoute>
+        }/>
+
 
 
 
