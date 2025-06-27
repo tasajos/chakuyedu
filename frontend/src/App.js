@@ -41,6 +41,7 @@ import SeguimientoEstudiante from './Components/Docente/GestionEstudiante/Seguim
 import SistemaAcademico from './Components/Docente/GestionAcademica/SistemaAcademico';
 import CalificacionFinal from './Components/Docente/GestionAcademica/CalificacionFinal';
 import PerfilDocente from './Components/Docente/PerfilDocente/PerfilDocentes';
+import CrearExamen from './Components/Docente/GestionMateria/CrearExamen';
 import axios from 'axios';
 //Estudiante
 import EstudianteMaterias from './Components/Estudiante/GestionMateria/EstudianteMateria';
@@ -343,6 +344,24 @@ function App() {
     </ProtectedRoute>
   } 
 />
+
+
+<Route 
+  path="/docente/materia/:materiaId/crear-examen" 
+  element={
+    <ProtectedRoute rolPermitido="docente">
+      <Navbar />
+      <CrearExamen  />
+    </ProtectedRoute>
+  } 
+/>
+
+
+
+
+
+
+
 
         
 
