@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import SidebarMenu from '../../SidebarMenu';
 import Modal from '../../Utils/Modal'; // Usamos nuestro wrapper de react-bootstrap
 import { Button } from 'react-bootstrap'; // Importamos el botón de react-bootstrap
-import { BookCopy, CheckSquare, Smile } from 'lucide-react';
+import { BookCopy, CheckSquare, Smile,FileSignature  } from 'lucide-react';
 import '../../../Styles/Docente/SeguimientoEstudiante.css';
 
 class SeguimientoEstudiante extends Component {
@@ -15,13 +15,16 @@ class SeguimientoEstudiante extends Component {
     // Datos cargados
     materiasAsignadas: [],
     tareasDisponibles: [],
+    examenesDisponibles: [],
     estudiantes: [],
     // Estado de la UI
     selectedMateriaId: '',
     selectedTareaId: '',
+    selectedExamenId: '',
     // Estados de carga y mensajes
     loadingMaterias: true,
     loadingTareas: true,
+    loadingExamenes: true,
     loadingEstudiantes: false,
     mensaje: '',
     error: '',
@@ -56,7 +59,8 @@ class SeguimientoEstudiante extends Component {
   loadInitialData = async (docenteId) => {
     await Promise.all([
       this.loadMisMaterias(docenteId),
-      this.loadTareasDisponibles()
+      this.loadTareasDisponibles(),
+      this.loadExamenesDisponibles(),
     ]);
   }
 
@@ -83,6 +87,17 @@ class SeguimientoEstudiante extends Component {
     }
   }
 
+loadExamenesDisponibles = async () => {
+    try {
+      const examenesSnap = await getDocs(collection(db, 'examenes'));
+      const examenesList = examenesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this.setState({ examenesDisponibles: examenesList, loadingExamenes: false });
+    } catch (error) {
+      this.setState({ error: 'Error al cargar los exámenes.', loadingExamenes: false });
+    }
+  }
+
+
   handleMateriaChange = async (e) => {
     const materiaId = e.target.value;
     this.setState({ selectedMateriaId: materiaId, estudiantes: [], mensaje: '', error: '' });
@@ -104,6 +119,12 @@ class SeguimientoEstudiante extends Component {
   handleTareaChange = (e) => {
     this.setState({ selectedTareaId: e.target.value });
   }
+
+ handleExamenChange = (e) => {
+    this.setState({ selectedExamenId: e.target.value });
+  }
+
+
 
   handleAsignarTarea = async (estudianteId = null) => {
     const { selectedTareaId, selectedMateriaId, currentUser, estudiantes } = this.state;
@@ -158,6 +179,67 @@ class SeguimientoEstudiante extends Component {
       this.setState({ error: 'No se pudo completar la asignación.', mensaje: '' });
     }
   }
+
+   // --- NUEVO: Lógica para asignar exámenes, adaptada de handleAsignarTarea ---
+  handleAsignarExamen = async (estudianteId = null) => {
+    const { selectedExamenId, selectedMateriaId, currentUser, estudiantes } = this.state;
+    if (!selectedExamenId) {
+      this.setState({ error: 'Por favor, seleccione un examen para asignar.' });
+      return;
+    }
+    const targets = estudianteId ? [estudiantes.find(e => e.id === estudianteId)] : estudiantes;
+    if (!targets[0]) {
+      this.setState({ error: 'Estudiante no encontrado.' });
+      return;
+    }
+    this.setState({ mensaje: 'Verificando y asignando examen(es)...', error: '' });
+    try {
+      const batch = writeBatch(db);
+      const yaAsignados = [];
+      const nuevosAsignados = [];
+
+      for (const est of targets) {
+        const q = query(collection(db, 'estudiante_examen'), where('estudiante_id', '==', est.id), where('examen_id', '==', selectedExamenId));
+        const existingAssignmentSnap = await getDocs(q);
+
+        if (existingAssignmentSnap.empty) {
+          const newAsignacionRef = doc(collection(db, 'estudiante_examen'));
+          batch.set(newAsignacionRef, {
+            estudiante_id: est.id,
+            examen_id: selectedExamenId,
+            materia_id: selectedMateriaId,
+            docente_id: currentUser.uid,
+            estado: 'pendiente',
+            fecha_asignacion: serverTimestamp(),
+            calificacion_obtenida: null,
+          });
+          nuevosAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
+        } else {
+          yaAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
+        }
+      }
+
+      if (nuevosAsignados.length > 0) {
+        await batch.commit();
+      }
+
+      let successMsg = '';
+      let errorMsg = '';
+      if (nuevosAsignados.length > 0) {
+        successMsg = `Examen asignado correctamente a: ${nuevosAsignados.join(', ')}.`;
+      }
+      if (yaAsignados.length > 0) {
+        errorMsg = `El examen ya estaba asignado a: ${yaAsignados.join(', ')}.`;
+      }
+      this.setState({ mensaje: successMsg, error: errorMsg });
+    } catch (error) {
+      console.error("Error al asignar examen(es):", error);
+      this.setState({ error: 'No se pudo completar la asignación del examen.', mensaje: '' });
+    }
+  }
+
+
+
   
   // --- Lógica del Modal (sin cambios) ---
   handleOpenModal = (student, type) => {
@@ -223,7 +305,7 @@ class SeguimientoEstudiante extends Component {
 
   render() {
     const { materiasAsignadas, tareasDisponibles, estudiantes, selectedMateriaId, selectedTareaId, loadingMaterias, loadingTareas, loadingEstudiantes, mensaje, error,
-      isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro 
+      isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro ,examenesDisponibles, selectedExamenId, loadingExamenes
     } = this.state;
 
     return (
@@ -245,6 +327,34 @@ class SeguimientoEstudiante extends Component {
 
             {selectedMateriaId && (
               <>
+
+ {/* --- NUEVO: Tarjeta para Asignar Examen --- */}
+                <div className="card shadow-sm mb-4">
+                  <div className="card-header">
+                    <FileSignature size={18} className="me-2" /> Asignar Examen a la Clase
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-2 align-items-end">
+                      <div className="col-md-9">
+                        <label htmlFor="examen-select" className="form-label">Examen a Asignar</label>
+                        <select id="examen-select" className="form-select" value={selectedExamenId} onChange={this.handleExamenChange} disabled={loadingExamenes || !selectedMateriaId}>
+                          <option value="">-- Exámenes Disponibles --</option>
+                          {examenesDisponibles.map(ex => <option key={ex.id} value={ex.id}>{ex.titulo}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-md-3">
+                        <button className="btn btn-primary w-100" onClick={() => this.handleAsignarExamen()} disabled={!selectedExamenId || estudiantes.length === 0}>
+                          Asignar Examen a Todos
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+
+
+
                 <div className="card shadow-sm mb-4">
                   <div className="card-header">
                     <BookCopy size={18} className="me-2" /> Asignar Tarea a la Clase
@@ -270,10 +380,11 @@ class SeguimientoEstudiante extends Component {
                 {mensaje && <div className="alert alert-success">{mensaje}</div>}
                 {error && <div className="alert alert-danger">{error}</div>}
 
+                {/* Tabla de Estudiantes (con botón nuevo) */}
                 <div className="card shadow-sm">
                   <div className="card-header">Lista de Estudiantes ({estudiantes.length})</div>
                   <div className="card-body p-0">
-                    {loadingEstudiantes ? <p className="p-3">Cargando estudiantes...</p> : (
+                    {loadingEstudiantes ? <p className="p-3">Cargando...</p> : (
                       <div className="table-responsive">
                         <table className="table table-hover align-middle mb-0">
                           <thead className="table-light">
@@ -291,7 +402,9 @@ class SeguimientoEstudiante extends Component {
                                 <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
                                 <td>{est.correo}</td>
                                 <td className="text-center actions-cell">
-                                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
+                                  {/* --- NUEVO: Botón para asignar examen individual --- */}
+                                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarExamen(est.id)} disabled={!selectedExamenId}>Asignar Examen</button>
+                                  <button className="btn btn-sm btn-outline-secondary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
                                   <button onClick={() => this.handleOpenModal(est, 'notas')} className="btn btn-sm btn-outline-success me-1"><CheckSquare size={16} /> Notas</button>
                                   <button onClick={() => this.handleOpenModal(est, 'comportamiento')} className="btn btn-sm btn-outline-warning"><Smile size={16} /> Comportamiento</button>
                                 </td>
