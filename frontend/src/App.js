@@ -27,6 +27,10 @@ import ReporteDocenteMateria from './Components/Admin/GestionDocente/ReporteDoce
 import Mantenimiento from './Components/Admin/GestionMantenimiento/Mantenimiento';
 import ListarAdmins from './Components/Admin/GestionMantenimiento/ListarAdmins';
 import ListadoAsistencia from './Components/Admin/GestionAcademica/AsistenciaMateria/ListadoAsistencia';
+import ReporteAsistencia from './Components/Admin/GestionAcademica/AsistenciaMateria/ReporteAsistencia';
+
+
+
 
 //Docentes
 import Gdmateria from './Components/Docente/GestionMateria/GestionMaterias';
@@ -229,6 +233,13 @@ function App() {
         }/>
 
 
+<Route path="/admin/asistencia/reporte" element={
+        <ProtectedRoute rolPermitido="admin">
+        <SidebarMenu />
+        <Navbar />
+        <ReporteAsistencia    />
+        </ProtectedRoute>
+        }/>
 
 
 

@@ -35,8 +35,10 @@ class AdminDashboard extends Component {
               'Gestión Docente','Perfiles y asignaciones.','/admin/GestionDocente/GestionDocente')}
             {this.renderCard(<BookOpen size={32} className="text-info"/>,
               'Gestión Académica','Materias y planificación.','/admin/GestionAcademica/GestionAcademica')}
+           
+           {/*
             {this.renderCard(<BarChart2 size={32} className="text-danger"/>,
-              'Informes','Reportes y estadísticas.','/admin/informes')}
+              'Informes','Reportes y estadísticas.','/admin/informes')} */}
           </div>
         </main>
       </div>
