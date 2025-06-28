@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCrede
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
+import { Link } from 'react-router-dom';
 import { BookCopy, ClipboardList, User, KeyRound, FileSignature } from 'lucide-react';
 import '../../../Styles/Estudiante/PerfilEstudiante.css';
 
@@ -149,13 +150,15 @@ class PerfilEstudiante extends Component {
               </div>
 {/* Nueva tarjeta para exámenes */}
               <div className="col-lg-4 col-md-12 mb-4">
-                <div className="stat-card h-100">
-                  <FileSignature size={40} className="text-warning" />
-                  <div>
-                    <span className="stat-value">{stats.examenesPendientes}</span>
-                    <span className="stat-label">Exámenes Pendientes</span>
+                <Link to="/Estudiante/Examenes/EstudianteExamenes" className="text-decoration-none">
+                  <div className="stat-card h-100 linkable">
+                    <FileSignature size={40} className="text-warning" />
+                    <div>
+                      <span className="stat-value">{stats.examenesPendientes}</span>
+                      <span className="stat-label">Exámenes Pendientes</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </div>
             </div>
             

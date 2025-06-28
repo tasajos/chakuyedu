@@ -49,6 +49,8 @@ import EstudianteMateriaDetalle from './Components/Estudiante/GestionMateria/Est
 import PerfilEstudiante from './Components/Estudiante/PerfilEstudiante/PerfilEstudiantes';
 import EstudianteTareas from './Components/Estudiante/ExamenesyTareas/EstudianteTareas';
 import EstudianteCertificados from './Components/Estudiante/Certificados/EstudiantesCertificados';
+import EstudianteExamenes from './Components/Estudiante/Examenes/EstudianteExamenes';
+
 // Estos son placeholders, 
 /*const Admin = () => <h2>Panel Admin</h2>;
 const Docente = () => <h2>Panel Docente</h2>;
@@ -414,6 +416,16 @@ function App() {
     <ProtectedRoute rolPermitido="estudiante">
       <Navbar />
       <EstudianteCertificados />
+    </ProtectedRoute>
+  } 
+/>
+
+<Route 
+  path="/Estudiante/Examenes/EstudianteExamenes" 
+  element={
+    <ProtectedRoute rolPermitido="estudiante">
+      <Navbar />
+      <EstudianteExamenes  />
     </ProtectedRoute>
   } 
 />
