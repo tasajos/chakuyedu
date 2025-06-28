@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCrede
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
+import { Link } from 'react-router-dom';
 import { BookUp, Users, User, KeyRound, FileSignature, ClipboardCheck, Edit } from 'lucide-react';
 import '../../../Styles/Docente/PerfilDocente.css';
 
@@ -17,6 +18,9 @@ class PerfilDocente extends Component {
       tareasPorRevisar: 0,
       examenesPorRevisar: 0,
     },
+ revisarTareasLink: '/docente/gestionacademica/sistemaacademico', 
+
+
     // Formulario de contraseña
     oldPassword: '',
     newPassword: '',
@@ -74,6 +78,20 @@ class PerfilDocente extends Component {
       const tareasPorRevisar = tareasRevisarSnap.size;
       const examenesPorRevisar = examenesRevisarSnap.size;
 
+
+ // Lógica para el enlace inteligente
+      let linkParaTareas = '/docente/gestionacademica/sistemaacademico'; // Enlace por defecto
+      if (!tareasRevisarSnap.empty) {
+        const idsDeMaterias = tareasRevisarSnap.docs.map(d => d.data().materia_id);
+        const uniqueIds = new Set(idsDeMaterias);
+        // Si todas las tareas pendientes son de UNA SOLA materia
+        if (uniqueIds.size === 1) {
+          const materiaIdUnica = idsDeMaterias[0];
+          // Creamos un enlace con un parámetro de consulta
+          linkParaTareas = `/docente/gestionacademica/sistemaacademico?materia=${materiaIdUnica}`;
+        }
+      }
+
       // El cálculo de estudiantes únicos se hace después de obtener las materias
       let estudiantesCount = 0;
       if (materiasCount > 0) {
@@ -85,6 +103,7 @@ class PerfilDocente extends Component {
       
       this.setState({ 
         stats: { materiasCount, estudiantesCount, examenesCreados, tareasPorRevisar, examenesPorRevisar }, 
+        revisarTareasLink: linkParaTareas, // Guardamos el enlace correcto en el estado
         loading: false 
       });
 
@@ -139,7 +158,7 @@ class PerfilDocente extends Component {
   }
 
   render() {
-    const { loading, docenteData, stats, oldPassword, newPassword, confirmPassword, isSaving, mensaje, error } = this.state;
+    const { loading, docenteData, stats,revisarTareasLink , oldPassword, newPassword, confirmPassword, isSaving, mensaje, error } = this.state;
 
     if (loading) {
       return <div className="dashboard-layout"><SidebarMenu /><main className="main-content p-4"><p>Cargando perfil...</p></main></div>;
@@ -185,15 +204,17 @@ class PerfilDocente extends Component {
                 </div>
               </div>
               {/* Tareas por Revisar */}
-              <div className="col-lg-6 mb-4">
-                <div className="stat-card h-100">
+            <div className="col-lg-6 mb-4">
+              <Link to={revisarTareasLink} className="text-decoration-none">
+                <div className="stat-card h-100 linkable">
                   <ClipboardCheck size={40} className="text-warning" />
                   <div>
                     <span className="stat-value">{stats.tareasPorRevisar}</span>
                     <span className="stat-label">Tareas por Revisar</span>
                   </div>
                 </div>
-              </div>
+              </Link>
+            </div>
               {/* Exámenes por Revisar */}
               <div className="col-lg-6 mb-4">
                 <div className="stat-card h-100">
