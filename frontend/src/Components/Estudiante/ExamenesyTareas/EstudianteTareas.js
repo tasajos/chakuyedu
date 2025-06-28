@@ -3,23 +3,21 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
-import Modal from '../../Utils/Modal'; // Usamos nuestro nuevo Modal basado en Bootstrap
-import { Button } from 'react-bootstrap'; // Importamos el botón de react-bootstrap
-import { ClipboardList, FileWarning } from 'lucide-react';
+import Modal from '../../Utils/Modal';
+import { Button } from 'react-bootstrap';
+import { ClipboardList, FileSignature } from 'lucide-react';
 import '../../../Styles/Estudiante/EstudianteTareas.css';
 
 class EstudianteTareas extends Component {
   state = {
-    // Datos
-    tareasAgrupadas: {}, // Ej: { 'Cálculo I': [tarea1, tarea2], ... }
-    // Estado de la UI
+    tareasAgrupadas: {},
+    examenesPendientes: [],
     loading: true,
     error: null,
     currentUser: null,
-    // Estado del Modal
     isModalOpen: false,
     selectedTask: null,
-    entregaMetodo: 'drive', // Valor por defecto
+    entregaMetodo: 'drive',
     isSubmitting: false,
   };
 
@@ -30,7 +28,7 @@ class EstudianteTareas extends Component {
     this.authSubscription = onAuthStateChanged(auth, (user) => {
       if (user) {
         this.setState({ currentUser: user });
-        this.loadTareas(user.uid);
+        this.loadActividades(user.uid); 
       } else {
         this.setState({ loading: false, error: 'Debe iniciar sesión.' });
       }
@@ -41,32 +39,14 @@ class EstudianteTareas extends Component {
     if (this.authSubscription) this.authSubscription();
   }
 
-  loadTareas = async (estudianteId) => {
+  loadActividades = async (estudianteId) => {
     this.setState({ loading: true, error: null });
     try {
-      // 1. Obtener todas las asignaciones de tareas del estudiante
-      const etQuery = query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', estudianteId));
-      const etSnap = await getDocs(etQuery);
+      const [tareasCompletas, examenesCompletos] = await Promise.all([
+        this.fetchTareas(estudianteId),
+        this.fetchExamenes(estudianteId)
+      ]);
 
-      // 2. "Enriquecer" cada asignación con los detalles de la tarea y la materia
-      const tareasPromises = etSnap.docs.map(async (asigDoc) => {
-        const asignacion = { id: asigDoc.id, ...asigDoc.data() };
-        
-        const tareaSnap = await getDoc(doc(db, 'tareas', asignacion.tarea_id));
-        const materiaSnap = await getDoc(doc(db, 'materias', asignacion.materia_id));
-
-        return {
-          ...asignacion,
-          titulo: tareaSnap.exists() ? tareaSnap.data().titulo : 'Tarea no encontrada',
-          descripcion: tareaSnap.exists() ? tareaSnap.data().descripcion : '',
-          fecha_entrega_tarea: tareaSnap.exists() ? tareaSnap.data().fecha_entrega : '',
-          materiaNombre: materiaSnap.exists() ? materiaSnap.data().nombre : 'Materia no encontrada',
-        };
-      });
-
-      const tareasCompletas = await Promise.all(tareasPromises);
-
-      // 3. Agrupar las tareas por nombre de materia
       const tareasAgrupadas = tareasCompletas.reduce((acc, tarea) => {
         const materia = tarea.materiaNombre;
         if (!acc[materia]) {
@@ -76,31 +56,59 @@ class EstudianteTareas extends Component {
         return acc;
       }, {});
       
-      this.setState({ tareasAgrupadas, loading: false });
+      this.setState({ 
+        tareasAgrupadas, 
+        examenesPendientes: examenesCompletos,
+        loading: false 
+      });
     } catch (error) {
-      console.error("Error cargando tareas:", error);
-      this.setState({ error: 'No se pudieron cargar las tareas.', loading: false });
+      console.error("Error cargando actividades:", error);
+      this.setState({ error: 'No se pudieron cargar tus actividades pendientes.', loading: false });
     }
   }
 
-  // --- Lógica del Modal y Entrega ---
-
-  handleOpenModal = (task) => {
-    this.setState({ isModalOpen: true, selectedTask: task });
+  fetchTareas = async (estudianteId) => {
+    const etQuery = query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', estudianteId));
+    const etSnap = await getDocs(etQuery);
+    const tareasPromises = etSnap.docs.map(async (asigDoc) => {
+      const asignacion = { id: asigDoc.id, ...asigDoc.data() };
+      const tareaSnap = await getDoc(doc(db, 'tareas', asignacion.tarea_id));
+      const materiaSnap = await getDoc(doc(db, 'materias', asignacion.materia_id));
+      return {
+        ...asignacion,
+        titulo: tareaSnap.exists() ? tareaSnap.data().titulo : 'Tarea no encontrada',
+        fecha_entrega_tarea: tareaSnap.exists() ? tareaSnap.data().fecha_entrega : '',
+        materiaNombre: materiaSnap.exists() ? materiaSnap.data().nombre : 'Materia no encontrada',
+      };
+    });
+    return Promise.all(tareasPromises);
   }
 
-  handleCloseModal = () => {
-    this.setState({ isModalOpen: false, selectedTask: null, entregaMetodo: 'drive' });
+  fetchExamenes = async (estudianteId) => {
+    const eeQuery = query(collection(db, 'estudiante_examen'), where('estudiante_id', '==', estudianteId), where('estado', '==', 'pendiente'));
+    const eeSnap = await getDocs(eeQuery);
+    const examenesPromises = eeSnap.docs.map(async (asigDoc) => {
+      const asignacion = { id: asigDoc.id, ...asigDoc.data() };
+      const examenSnap = await getDoc(doc(db, 'examenes', asignacion.examen_id));
+      const materiaSnap = await getDoc(doc(db, 'materias', asignacion.materia_id));
+      return {
+        ...asignacion,
+        titulo: examenSnap.exists() ? examenSnap.data().titulo : 'Examen no encontrado',
+        fecha_examen: examenSnap.exists() ? examenSnap.data().fecha_examen : '',
+        duracion_minutos: examenSnap.exists() ? examenSnap.data().duracion_minutos : '',
+        materiaNombre: materiaSnap.exists() ? materiaSnap.data().nombre : 'Materia no encontrada',
+      };
+    });
+    return Promise.all(examenesPromises);
   }
 
-  handleInputChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
+  handleOpenModal = (task) => this.setState({ isModalOpen: true, selectedTask: task });
+  handleCloseModal = () => this.setState({ isModalOpen: false, selectedTask: null, entregaMetodo: 'drive' });
+  handleInputChange = (e) => this.setState({ [e.target.name]: e.target.value });
 
   handleEntregarTarea = async () => {
     const { selectedTask, entregaMetodo } = this.state;
     if (!selectedTask) return;
-
     this.setState({ isSubmitting: true });
     try {
       const tareaRef = doc(db, 'estudiante_tarea', selectedTask.id);
@@ -110,7 +118,6 @@ class EstudianteTareas extends Component {
         fecha_entrega_estudiante: serverTimestamp()
       });
       
-      // Actualizar el estado local para reflejar el cambio en la UI sin recargar
       this.setState(prevState => {
         const nuevasTareasAgrupadas = { ...prevState.tareasAgrupadas };
         const materiaKey = selectedTask.materiaNombre;
@@ -123,14 +130,13 @@ class EstudianteTareas extends Component {
       this.handleCloseModal();
     } catch (error) {
       console.error("Error al entregar la tarea:", error);
-      // Aquí podrías manejar un estado de error para el modal
     } finally {
       this.setState({ isSubmitting: false });
     }
   }
 
   render() {
-    const { loading, error, tareasAgrupadas, isModalOpen, selectedTask, entregaMetodo, isSubmitting } = this.state;
+    const { loading, error, tareasAgrupadas, examenesPendientes, isModalOpen, selectedTask, entregaMetodo, isSubmitting } = this.state;
 
     return (
       <div className="dashboard-layout">
@@ -139,24 +145,44 @@ class EstudianteTareas extends Component {
           <div className="container-fluid p-4">
             <h3 className="mb-4">Mis Exámenes y Tareas</h3>
 
-            {/* Sección Exámenes */}
             <div className="card shadow-sm mb-4">
-              <div className="card-header"><FileWarning size={18} className="me-2" />Exámenes Programados</div>
-              <div className="card-body text-center text-muted">
-                <p className="mb-0">No hay exámenes disponibles en este momento.</p>
+              <div className="card-header"><FileSignature size={18} className="me-2" />Exámenes Programados</div>
+              <div className="card-body">
+                {loading ? <p className="text-muted">Buscando exámenes...</p> : 
+                 examenesPendientes.length > 0 ? (
+                  <ul className="list-group list-group-flush">
+                    {examenesPendientes.map(examen => (
+                      <li key={examen.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{examen.titulo}</strong>
+                          <span className="d-block text-muted">{examen.materiaNombre}</span>
+                        </div>
+                        <div className='text-end'>
+                          <span className="badge bg-danger">Fecha: {examen.fecha_examen}</span>
+                          <small className="d-block text-muted mt-1">Duración: {examen.duracion_minutos} min.</small>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                 ) : (
+                  <p className="text-muted text-center mb-0">No tienes exámenes programados.</p>
+                 )
+                }
               </div>
             </div>
 
-            {/* Sección Tareas */}
             <div className="tareas-container">
               <h4 className="mb-3">Tareas Asignadas</h4>
-              {loading && <p>Cargando...</p>}
+              {loading && <p>Cargando tareas...</p>}
               {error && <p className="text-danger">{error}</p>}
-
-              {!loading && Object.keys(tareasAgrupadas).length > 0 ? (
+              {!loading && Object.keys(tareasAgrupadas).length === 0 && (
+                <div className="alert alert-info">¡Felicidades! No tienes tareas pendientes.</div>
+              )}
+              {!loading && Object.keys(tareasAgrupadas).length > 0 && (
                 Object.entries(tareasAgrupadas).map(([materia, tareas]) => (
                   <div key={materia} className="materia-group mb-4">
                     <h5>{materia}</h5>
+                    {/* === CÓDIGO RESTAURADO === */}
                     <div className="list-group">
                       {tareas.map(tarea => (
                         <div key={tarea.id} className="list-group-item d-flex justify-content-between align-items-center">
@@ -176,10 +202,9 @@ class EstudianteTareas extends Component {
                         </div>
                       ))}
                     </div>
+                    {/* === FIN DEL CÓDIGO RESTAURADO === */}
                   </div>
                 ))
-              ) : (
-                !loading && <div className="alert alert-info">¡Felicidades! No tienes tareas pendientes.</div>
               )}
             </div>
           </div>
@@ -191,9 +216,7 @@ class EstudianteTareas extends Component {
           title={`Entregar Tarea: ${selectedTask?.titulo}`}
           footer={
             <>
-              <Button variant="secondary" onClick={this.handleCloseModal}>
-                Cancelar
-              </Button>
+              <Button variant="secondary" onClick={this.handleCloseModal}>Cancelar</Button>
               <Button 
                 variant="primary" 
                 onClick={this.handleEntregarTarea}

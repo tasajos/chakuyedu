@@ -5,9 +5,9 @@ import { db } from '../../../firebase';
 import { Link } from 'react-router-dom';
 
 import SidebarMenu from '../../SidebarMenu';
-import Modal from '../../Utils/Modal'; // Usamos nuestro wrapper de react-bootstrap
-import { Button } from 'react-bootstrap'; // Importamos el botón de react-bootstrap
-import { BookCopy, CheckSquare, Smile,FileSignature  } from 'lucide-react';
+import Modal from '../../Utils/Modal';
+import { Button } from 'react-bootstrap';
+import { BookCopy, CheckSquare, Smile, FileSignature } from 'lucide-react';
 import '../../../Styles/Docente/SeguimientoEstudiante.css';
 
 class SeguimientoEstudiante extends Component {
@@ -23,15 +23,13 @@ class SeguimientoEstudiante extends Component {
     selectedExamenId: '',
     // Estados de carga y mensajes
     loadingMaterias: true,
-    loadingTareas: true,
-    loadingExamenes: true,
-    loadingEstudiantes: false,
+    loadingDetalles: false,
     mensaje: '',
     error: '',
     currentUser: null,
     // Estado para el Modal
     isModalOpen: false,
-    modalType: '', // 'notas' o 'comportamiento'
+    modalType: '',
     selectedStudent: null,
     observacion: '',
     comportamientoSeleccionado: '',
@@ -45,23 +43,15 @@ class SeguimientoEstudiante extends Component {
     this.authSubscription = onAuthStateChanged(auth, (user) => {
       if (user) {
         this.setState({ currentUser: user });
-        this.loadInitialData(user.uid);
+        this.loadMisMaterias(user.uid);
       } else {
-        this.setState({ loadingMaterias: false, loadingTareas: false, error: 'Debe iniciar sesión.' });
+        this.setState({ loadingMaterias: false, error: 'Debe iniciar sesión.' });
       }
     });
   }
 
   componentWillUnmount() {
     if (this.authSubscription) this.authSubscription();
-  }
-
-  loadInitialData = async (docenteId) => {
-    await Promise.all([
-      this.loadMisMaterias(docenteId),
-      this.loadTareasDisponibles(),
-      this.loadExamenesDisponibles(),
-    ]);
   }
 
   loadMisMaterias = async (docenteId) => {
@@ -77,54 +67,67 @@ class SeguimientoEstudiante extends Component {
     }
   }
 
-  loadTareasDisponibles = async () => {
+  loadTareasPorMateria = async (materiaId) => {
     try {
-      const tareasSnap = await getDocs(collection(db, 'tareas'));
+      const q = query(collection(db, 'tareas'), where('materia_id', '==', materiaId));
+      const tareasSnap = await getDocs(q);
       const tareasList = tareasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      this.setState({ tareasDisponibles: tareasList, loadingTareas: false });
+      this.setState({ tareasDisponibles: tareasList });
     } catch (error) {
-      this.setState({ error: 'Error al cargar las tareas.', loadingTareas: false });
+      this.setState({ error: 'Error al cargar las tareas de esta materia.' });
     }
   }
 
-loadExamenesDisponibles = async () => {
+  loadExamenesPorMateria = async (materiaId) => {
     try {
-      const examenesSnap = await getDocs(collection(db, 'examenes'));
+      const q = query(collection(db, 'examenes'), where('materia_id', '==', materiaId));
+      const examenesSnap = await getDocs(q);
       const examenesList = examenesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      this.setState({ examenesDisponibles: examenesList, loadingExamenes: false });
+      this.setState({ examenesDisponibles: examenesList });
     } catch (error) {
-      this.setState({ error: 'Error al cargar los exámenes.', loadingExamenes: false });
+      this.setState({ error: 'Error al cargar los exámenes de esta materia.' });
     }
   }
-
 
   handleMateriaChange = async (e) => {
     const materiaId = e.target.value;
-    this.setState({ selectedMateriaId: materiaId, estudiantes: [], mensaje: '', error: '' });
+    this.setState({ 
+      selectedMateriaId: materiaId, 
+      estudiantes: [], 
+      tareasDisponibles: [],
+      examenesDisponibles: [],
+      selectedTareaId: '',
+      selectedExamenId: '',
+      mensaje: '', 
+      error: '' 
+    });
+
     if (!materiaId) return;
 
-    this.setState({ loadingEstudiantes: true });
+    this.setState({ loadingDetalles: true });
     try {
       const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', '==', materiaId));
       const emSnap = await getDocs(emQuery);
       const estudiantesPromises = emSnap.docs.map(emDoc => getDoc(doc(db, 'usuarios', emDoc.data().estudiante_id)));
-      const estudiantesSnaps = await Promise.all(estudiantesPromises);
-      const estudiantesList = estudiantesSnaps.map(snap => snap.exists() ? { id: snap.id, ...snap.data() } : null).filter(Boolean);
-      this.setState({ estudiantes: estudiantesList, loadingEstudiantes: false });
+      
+      await Promise.all([
+        Promise.all(estudiantesPromises).then(snaps => {
+          const estudiantesList = snaps.map(snap => snap.exists() ? { id: snap.id, ...snap.data() } : null).filter(Boolean);
+          this.setState({ estudiantes: estudiantesList });
+        }),
+        this.loadTareasPorMateria(materiaId),
+        this.loadExamenesPorMateria(materiaId)
+      ]);
+
     } catch (error) {
-      this.setState({ error: 'Error al cargar los estudiantes.', loadingEstudiantes: false });
+      this.setState({ error: 'Error al cargar los detalles de la materia.' });
+    } finally {
+      this.setState({ loadingDetalles: false });
     }
   }
 
-  handleTareaChange = (e) => {
-    this.setState({ selectedTareaId: e.target.value });
-  }
-
- handleExamenChange = (e) => {
-    this.setState({ selectedExamenId: e.target.value });
-  }
-
-
+  handleTareaChange = (e) => this.setState({ selectedTareaId: e.target.value });
+  handleExamenChange = (e) => this.setState({ selectedExamenId: e.target.value });
 
   handleAsignarTarea = async (estudianteId = null) => {
     const { selectedTareaId, selectedMateriaId, currentUser, estudiantes } = this.state;
@@ -175,12 +178,10 @@ loadExamenesDisponibles = async () => {
       }
       this.setState({ mensaje: successMsg, error: errorMsg });
     } catch (error) {
-      console.error("Error al asignar tarea(s):", error);
       this.setState({ error: 'No se pudo completar la asignación.', mensaje: '' });
     }
-  }
+  };
 
-   // --- NUEVO: Lógica para asignar exámenes, adaptada de handleAsignarTarea ---
   handleAsignarExamen = async (estudianteId = null) => {
     const { selectedExamenId, selectedMateriaId, currentUser, estudiantes } = this.state;
     if (!selectedExamenId) {
@@ -197,11 +198,9 @@ loadExamenesDisponibles = async () => {
       const batch = writeBatch(db);
       const yaAsignados = [];
       const nuevosAsignados = [];
-
       for (const est of targets) {
         const q = query(collection(db, 'estudiante_examen'), where('estudiante_id', '==', est.id), where('examen_id', '==', selectedExamenId));
         const existingAssignmentSnap = await getDocs(q);
-
         if (existingAssignmentSnap.empty) {
           const newAsignacionRef = doc(collection(db, 'estudiante_examen'));
           batch.set(newAsignacionRef, {
@@ -218,11 +217,9 @@ loadExamenesDisponibles = async () => {
           yaAsignados.push(`${est.nombre} ${est.apellido_paterno}`);
         }
       }
-
       if (nuevosAsignados.length > 0) {
         await batch.commit();
       }
-
       let successMsg = '';
       let errorMsg = '';
       if (nuevosAsignados.length > 0) {
@@ -233,15 +230,10 @@ loadExamenesDisponibles = async () => {
       }
       this.setState({ mensaje: successMsg, error: errorMsg });
     } catch (error) {
-      console.error("Error al asignar examen(es):", error);
       this.setState({ error: 'No se pudo completar la asignación del examen.', mensaje: '' });
     }
   }
 
-
-
-  
-  // --- Lógica del Modal (sin cambios) ---
   handleOpenModal = (student, type) => {
     this.setState({
       isModalOpen: true,
@@ -295,7 +287,6 @@ loadExamenesDisponibles = async () => {
       });
       this.handleCloseModal();
     } catch (e) {
-      console.error(`Error guardando registro de ${modalType}:`, e);
       this.setState({
         error: `No se pudo guardar el registro.`,
         isSavingRegistro: false,
@@ -304,8 +295,11 @@ loadExamenesDisponibles = async () => {
   }
 
   render() {
-    const { materiasAsignadas, tareasDisponibles, estudiantes, selectedMateriaId, selectedTareaId, loadingMaterias, loadingTareas, loadingEstudiantes, mensaje, error,
-      isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro ,examenesDisponibles, selectedExamenId, loadingExamenes
+    const { 
+        materiasAsignadas, tareasDisponibles, examenesDisponibles, estudiantes, 
+        selectedMateriaId, selectedTareaId, selectedExamenId, 
+        loadingMaterias, loadingDetalles, mensaje, error,
+        isModalOpen, modalType, selectedStudent, observacion, comportamientoSeleccionado, isSavingRegistro 
     } = this.state;
 
     return (
@@ -325,20 +319,18 @@ loadExamenesDisponibles = async () => {
               </div>
             </div>
 
-            {selectedMateriaId && (
-              <>
+            {loadingDetalles && <div className="text-center p-4"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div></div>}
 
- {/* --- NUEVO: Tarjeta para Asignar Examen --- */}
+            {selectedMateriaId && !loadingDetalles && (
+              <>
                 <div className="card shadow-sm mb-4">
-                  <div className="card-header">
-                    <FileSignature size={18} className="me-2" /> Asignar Examen a la Clase
-                  </div>
+                  <div className="card-header"><FileSignature size={18} className="me-2" /> Asignar Examen a la Clase</div>
                   <div className="card-body">
                     <div className="row g-2 align-items-end">
                       <div className="col-md-9">
                         <label htmlFor="examen-select" className="form-label">Examen a Asignar</label>
-                        <select id="examen-select" className="form-select" value={selectedExamenId} onChange={this.handleExamenChange} disabled={loadingExamenes || !selectedMateriaId}>
-                          <option value="">-- Exámenes Disponibles --</option>
+                        <select id="examen-select" className="form-select" value={selectedExamenId} onChange={this.handleExamenChange}>
+                          <option value="">-- Exámenes de esta Materia --</option>
                           {examenesDisponibles.map(ex => <option key={ex.id} value={ex.id}>{ex.titulo}</option>)}
                         </select>
                       </div>
@@ -351,20 +343,14 @@ loadExamenesDisponibles = async () => {
                   </div>
                 </div>
 
-
-
-
-
                 <div className="card shadow-sm mb-4">
-                  <div className="card-header">
-                    <BookCopy size={18} className="me-2" /> Asignar Tarea a la Clase
-                  </div>
+                  <div className="card-header"><BookCopy size={18} className="me-2" /> Asignar Tarea a la Clase</div>
                   <div className="card-body">
                     <div className="row g-2 align-items-end">
                       <div className="col-md-9">
                         <label htmlFor="tarea-select" className="form-label">Tarea a Asignar</label>
-                        <select id="tarea-select" className="form-select" value={selectedTareaId} onChange={this.handleTareaChange} disabled={loadingTareas || !selectedMateriaId}>
-                          <option value="">-- Tareas Disponibles --</option>
+                        <select id="tarea-select" className="form-select" value={selectedTareaId} onChange={this.handleTareaChange}>
+                          <option value="">-- Tareas de esta Materia --</option>
                           {tareasDisponibles.map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}
                         </select>
                       </div>
@@ -380,42 +366,38 @@ loadExamenesDisponibles = async () => {
                 {mensaje && <div className="alert alert-success">{mensaje}</div>}
                 {error && <div className="alert alert-danger">{error}</div>}
 
-                {/* Tabla de Estudiantes (con botón nuevo) */}
                 <div className="card shadow-sm">
                   <div className="card-header">Lista de Estudiantes ({estudiantes.length})</div>
                   <div className="card-body p-0">
-                    {loadingEstudiantes ? <p className="p-3">Cargando...</p> : (
-                      <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                          <thead className="table-light">
-                            <tr>
-                              <th>Nro</th>
-                              <th>Nombre Completo</th>
-                              <th>Email</th>
-                              <th className="text-center">Acciones</th>
+                    <div className="table-responsive">
+                      <table className="table table-hover align-middle mb-0">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Nro</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                            <th className="text-center">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estudiantes.length > 0 ? estudiantes.map((est, i) => (
+                            <tr key={est.id}>
+                              <td>{i + 1}</td>
+                              <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
+                              <td>{est.correo}</td>
+                              <td className="text-center actions-cell">
+                                <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarExamen(est.id)} disabled={!selectedExamenId}>Asignar Examen</button>
+                                <button className="btn btn-sm btn-outline-secondary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
+                                <button onClick={() => this.handleOpenModal(est, 'notas')} className="btn btn-sm btn-outline-success me-1"><CheckSquare size={16} /> Notas</button>
+                                <button onClick={() => this.handleOpenModal(est, 'comportamiento')} className="btn btn-sm btn-outline-warning"><Smile size={16} /> Comportamiento</button>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {estudiantes.length > 0 ? estudiantes.map((est, i) => (
-                              <tr key={est.id}>
-                                <td>{i + 1}</td>
-                                <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
-                                <td>{est.correo}</td>
-                                <td className="text-center actions-cell">
-                                  {/* --- NUEVO: Botón para asignar examen individual --- */}
-                                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => this.handleAsignarExamen(est.id)} disabled={!selectedExamenId}>Asignar Examen</button>
-                                  <button className="btn btn-sm btn-outline-secondary me-1" onClick={() => this.handleAsignarTarea(est.id)} disabled={!selectedTareaId}>Asignar Tarea</button>
-                                  <button onClick={() => this.handleOpenModal(est, 'notas')} className="btn btn-sm btn-outline-success me-1"><CheckSquare size={16} /> Notas</button>
-                                  <button onClick={() => this.handleOpenModal(est, 'comportamiento')} className="btn btn-sm btn-outline-warning"><Smile size={16} /> Comportamiento</button>
-                                </td>
-                              </tr>
-                            )) : (
-                              <tr><td colSpan="4" className="text-center text-muted p-4">No hay estudiantes en esta materia.</td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                          )) : (
+                            <tr><td colSpan="4" className="text-center text-muted p-4">No hay estudiantes en esta materia.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </>
@@ -423,7 +405,6 @@ loadExamenesDisponibles = async () => {
           </div>
         </main>
         
-        {/* --- MODAL ACTUALIZADO PARA USAR REACT-BOOTSTRAP --- */}
         <Modal
           show={isModalOpen}
           onHide={this.handleCloseModal}
@@ -458,7 +439,6 @@ loadExamenesDisponibles = async () => {
               </select>
             </div>
           )}
-
           <div className="mb-3">
             <label htmlFor="observacion" className="form-label">Observaciones (Opcional)</label>
             <textarea
