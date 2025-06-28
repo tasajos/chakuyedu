@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCrede
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
-import { BookCopy, ClipboardList, User, KeyRound } from 'lucide-react';
+import { BookCopy, ClipboardList, User, KeyRound, FileSignature } from 'lucide-react';
 import '../../../Styles/Estudiante/PerfilEstudiante.css';
 
 class PerfilEstudiante extends Component {
@@ -13,6 +13,7 @@ class PerfilEstudiante extends Component {
     stats: {
       materiasInscritas: 0,
       tareasPendientes: 0,
+      examenesPendientes: 0, // Nuevo
     },
     // Formulario de contraseña
     oldPassword: '',
@@ -47,10 +48,11 @@ class PerfilEstudiante extends Component {
   loadProfileData = async (estudianteId) => {
     try {
       // 1. Obtener datos del usuario, sus materias y sus tareas pendientes en paralelo
-      const [userDocSnap, emSnap, etSnap] = await Promise.all([
+      const [userDocSnap, emSnap, etSnap,eeSnap] = await Promise.all([
         getDoc(doc(db, 'usuarios', estudianteId)),
         getDocs(query(collection(db, 'estudiante_materia'), where('estudiante_id', '==', estudianteId))),
-        getDocs(query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', estudianteId), where('estado', '==', 'pendiente')))
+        getDocs(query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', estudianteId), where('estado', '==', 'pendiente'))),
+        getDocs(query(collection(db, 'estudiante_examen'), where('estudiante_id', '==', estudianteId), where('estado', '==', 'pendiente'))) // Nueva consulta
       ]);
 
       if (userDocSnap.exists()) {
@@ -59,8 +61,8 @@ class PerfilEstudiante extends Component {
 
       const materiasInscritas = emSnap.size;
       const tareasPendientes = etSnap.size;
-
-      this.setState({ stats: { materiasInscritas, tareasPendientes }, loading: false });
+      const examenesPendientes = eeSnap.size; // Obtenemos el nuevo dato
+      this.setState({ stats: { materiasInscritas, tareasPendientes,examenesPendientes }, loading: false });
 
     } catch (error) {
       console.error("Error cargando datos del perfil:", error);
@@ -127,25 +129,37 @@ class PerfilEstudiante extends Component {
             <h3 className="mb-4">Mi Perfil de Estudiante</h3>
             
             <div className="row mb-4">
-              <div className="col-md-6">
-                <div className="stat-card">
+                   <div className="col-lg-4 col-md-6 mb-4">
+              <div className="stat-card h-100">
                   <BookCopy size={40} className="text-primary" />
-                  <div>
+                   <div>
                     <span className="stat-value">{stats.materiasInscritas}</span>
                     <span className="stat-label">Materias Inscritas</span>
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="stat-card">
+              <div className="col-lg-4 col-md-6 mb-4">
+                <div className="stat-card h-100">
                   <ClipboardList size={40} className="text-danger" />
                   <div>
                     <span className="stat-value">{stats.tareasPendientes}</span>
                     <span className="stat-label">Tareas Pendientes</span>
+                  </div>               
+                </div>  
+              </div>
+{/* Nueva tarjeta para exámenes */}
+              <div className="col-lg-4 col-md-12 mb-4">
+                <div className="stat-card h-100">
+                  <FileSignature size={40} className="text-warning" />
+                  <div>
+                    <span className="stat-value">{stats.examenesPendientes}</span>
+                    <span className="stat-label">Exámenes Pendientes</span>
                   </div>
                 </div>
               </div>
             </div>
+            
+         
 
             <div className="row">
               <div className="col-lg-6 mb-4">
