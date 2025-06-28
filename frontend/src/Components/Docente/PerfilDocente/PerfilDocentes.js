@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCrede
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenu from '../../SidebarMenu';
-import { BookUp, Users, User, KeyRound } from 'lucide-react';
+import { BookUp, Users, User, KeyRound, FileSignature, ClipboardCheck, Edit } from 'lucide-react';
 import '../../../Styles/Docente/PerfilDocente.css';
 
 class PerfilDocente extends Component {
@@ -13,6 +13,9 @@ class PerfilDocente extends Component {
     stats: {
       materiasCount: 0,
       estudiantesCount: 0,
+      examenesCreados: 0,
+      tareasPorRevisar: 0,
+      examenesPorRevisar: 0,
     },
     // Formulario de contraseña
     oldPassword: '',
@@ -44,12 +47,21 @@ class PerfilDocente extends Component {
     if (this.authSubscription) this.authSubscription();
   }
 
-  loadProfileData = async (docenteId) => {
+   loadProfileData = async (docenteId) => {
     try {
-      // 1. Obtener datos del usuario y materias en paralelo
-      const [userDocSnap, dmSnap] = await Promise.all([
+      // Realizamos todas las consultas de conteo en paralelo para máxima eficiencia
+      const [
+        userDocSnap, 
+        dmSnap, 
+        examenesCreadosSnap,
+        tareasRevisarSnap,
+        examenesRevisarSnap
+      ] = await Promise.all([
         getDoc(doc(db, 'usuarios', docenteId)),
-        getDocs(query(collection(db, 'docente_materia'), where('docente_id', '==', docenteId)))
+        getDocs(query(collection(db, 'docente_materia'), where('docente_id', '==', docenteId))),
+        getDocs(query(collection(db, 'examenes'), where('docente_id', '==', docenteId))),
+        getDocs(query(collection(db, 'estudiante_tarea'), where('docente_id', '==', docenteId), where('estado', '==', 'entregado'), where('calificacion', '==', null))),
+        getDocs(query(collection(db, 'estudiante_examen'), where('docente_id', '==', docenteId), where('estado', '==', 'finalizado'), where('calificacion_obtenida', '==', null)))
       ]);
 
       if (userDocSnap.exists()) {
@@ -58,8 +70,11 @@ class PerfilDocente extends Component {
 
       const materiasIds = dmSnap.docs.map(d => d.data().materia_id);
       const materiasCount = materiasIds.length;
+      const examenesCreados = examenesCreadosSnap.size;
+      const tareasPorRevisar = tareasRevisarSnap.size;
+      const examenesPorRevisar = examenesRevisarSnap.size;
 
-      // 2. Calcular estudiantes únicos
+      // El cálculo de estudiantes únicos se hace después de obtener las materias
       let estudiantesCount = 0;
       if (materiasCount > 0) {
         const emQuery = query(collection(db, 'estudiante_materia'), where('materia_id', 'in', materiasIds));
@@ -67,8 +82,11 @@ class PerfilDocente extends Component {
         const estudianteIds = new Set(emSnap.docs.map(d => d.data().estudiante_id));
         estudiantesCount = estudianteIds.size;
       }
-
-      this.setState({ stats: { materiasCount, estudiantesCount }, loading: false });
+      
+      this.setState({ 
+        stats: { materiasCount, estudiantesCount, examenesCreados, tareasPorRevisar, examenesPorRevisar }, 
+        loading: false 
+      });
 
     } catch (error) {
       console.error("Error cargando datos del perfil:", error);
@@ -134,10 +152,11 @@ class PerfilDocente extends Component {
           <div className="container-fluid p-4">
             <h3 className="mb-4">Perfil del Docente</h3>
             
-            {/* Sección de Estadísticas */}
+           {/* --- 3. SECCIÓN DE ESTADÍSTICAS MEJORADA CON 5 TARJETAS --- */}
             <div className="row mb-4">
-              <div className="col-md-6">
-                <div className="stat-card">
+              {/* Materias Asignadas */}
+              <div className="col-lg-4 col-md-6 mb-4">
+                <div className="stat-card h-100">
                   <BookUp size={40} className="text-primary" />
                   <div>
                     <span className="stat-value">{stats.materiasCount}</span>
@@ -145,12 +164,43 @@ class PerfilDocente extends Component {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="stat-card">
+              {/* Estudiantes Únicos */}
+              <div className="col-lg-4 col-md-6 mb-4">
+                <div className="stat-card h-100">
                   <Users size={40} className="text-success" />
                   <div>
                     <span className="stat-value">{stats.estudiantesCount}</span>
                     <span className="stat-label">Estudiantes Únicos</span>
+                  </div>
+                </div>
+              </div>
+              {/* Exámenes Creados */}
+              <div className="col-lg-4 col-md-6 mb-4">
+                <div className="stat-card h-100">
+                  <Edit size={40} className="text-info" />
+                  <div>
+                    <span className="stat-value">{stats.examenesCreados}</span>
+                    <span className="stat-label">Exámenes Elaborados</span>
+                  </div>
+                </div>
+              </div>
+              {/* Tareas por Revisar */}
+              <div className="col-lg-6 mb-4">
+                <div className="stat-card h-100">
+                  <ClipboardCheck size={40} className="text-warning" />
+                  <div>
+                    <span className="stat-value">{stats.tareasPorRevisar}</span>
+                    <span className="stat-label">Tareas por Revisar</span>
+                  </div>
+                </div>
+              </div>
+              {/* Exámenes por Revisar */}
+              <div className="col-lg-6 mb-4">
+                <div className="stat-card h-100">
+                  <FileSignature size={40} className="text-danger" />
+                  <div>
+                    <span className="stat-value">{stats.examenesPorRevisar}</span>
+                    <span className="stat-label">Exámenes por Revisar</span>
                   </div>
                 </div>
               </div>

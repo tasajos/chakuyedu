@@ -1,3 +1,8 @@
+28/06/2025 - 14:43 --011
+#Docente
+##Se actualizo el perfil para ver tareas y examenes pendientes
+
+
 28/06/2025 - 14:29 --010
 #Docente
 ##Se actualizo la forma de crear examen
