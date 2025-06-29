@@ -1,3 +1,11 @@
+28/06/2025 22:51 --0015
+#Docente
+- Ahora puede ver el examen que rindio el estudiante
+- Se habilito tab para visualizar examenes y tareas
+
+
+
+
 28/06/2025 22:15 --0014
 #Estudiante
 Ahora puede rendir su examen asignado
