@@ -1,3 +1,8 @@
+28/06/2025 22:15 --0014
+#Estudiante
+Ahora puede rendir su examen asignado
+
+
 28/06/2025 19:15 --0013
 #Estudiante
 Añadir Examenes Pendientes

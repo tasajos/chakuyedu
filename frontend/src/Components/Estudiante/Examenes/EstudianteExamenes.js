@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import SidebarMenuEstudiante from '../../SidebarMenu';
+import { Link } from 'react-router-dom'; 
 import { FileText } from 'lucide-react';
 import '../../../Styles/Estudiante/EstudianteExamenes.css';
 
@@ -35,14 +36,12 @@ class EstudianteExamenes extends Component {
   loadExamenes = async (estudianteId) => {
     this.setState({ loading: true, error: null });
     try {
-      // 1. Buscar todas las asignaciones de exámenes pendientes del estudiante
       const q = query(collection(db, 'estudiante_examen'), 
         where('estudiante_id', '==', estudianteId),
         where('estado', '==', 'pendiente')
       );
       const asigSnap = await getDocs(q);
 
-      // 2. "Enriquecer" los datos con los detalles de la materia y el examen
       const examenesPromises = asigSnap.docs.map(async (asigDoc) => {
         const asignacion = { id: asigDoc.id, ...asigDoc.data() };
         
@@ -69,6 +68,7 @@ class EstudianteExamenes extends Component {
 
   render() {
     const { loading, error, examenesPendientes } = this.state;
+    // La línea incorrecta ha sido eliminada de aquí
 
     return (
       <div className="dashboard-layout">
@@ -98,7 +98,9 @@ class EstudianteExamenes extends Component {
                           </div>
                           <div className="text-end">
                             <span className="d-block"><strong>Fecha:</strong> {examen.fecha_examen}</span>
-                            <button className="btn btn-primary btn-sm mt-2" disabled>Rendir Examen</button>
+                            <Link to={`/estudiante/examen/${examen.id}`} className="btn btn-primary btn-sm mt-2">
+                              Rendir Examen
+                            </Link>
                           </div>
                         </li>
                       ))
