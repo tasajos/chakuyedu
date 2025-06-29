@@ -1,3 +1,9 @@
+29/06/2025 13:54 --0016
+#Docente 
+- Ahora puede ver promedio del examen
+- Ahora se muestra automaticamente la nota de teoria
+
+
 28/06/2025 22:51 --0015
 #Docente
 - Ahora puede ver el examen que rindio el estudiante

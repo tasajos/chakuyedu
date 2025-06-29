@@ -83,11 +83,19 @@ class CalificacionFinal extends Component {
       this.setState({ estudiantes: estudiantesFiltrados });
 
       const calificacionesPromises = estudiantesFiltrados.map(async (estudiante) => {
+        // Calcular promedio de tareas
         const etQuery = query(collection(db, 'estudiante_tarea'), where('estudiante_id', '==', estudiante.id), where('materia_id', '==', materiaId));
         const etSnap = await getDocs(etQuery);
         const notasTareas = etSnap.docs.map(d => d.data().calificacion).filter(n => n !== null && !isNaN(n));
         const promedioTareas = notasTareas.length > 0 ? notasTareas.reduce((a, b) => a + b, 0) / notasTareas.length : 0;
 
+        // Calcular promedio de exámenes
+        const eeQuery = query(collection(db, 'estudiante_examen'), where('estudiante_id', '==', estudiante.id), where('materia_id', '==', materiaId));
+        const eeSnap = await getDocs(eeQuery);
+        const notasExamenes = eeSnap.docs.map(d => d.data().calificacion_obtenida).filter(n => n !== null && !isNaN(n));
+        const promedioExamenes = notasExamenes.length > 0 ? notasExamenes.reduce((a, b) => a + b, 0) / notasExamenes.length : 0;
+
+        // Buscar si ya tiene una calificación final guardada
         const califFinalRef = doc(db, 'calificaciones_finales', `${estudiante.id}_${materiaId}`);
         const califFinalSnap = await getDoc(califFinalRef);
         const datosGuardados = califFinalSnap.exists() ? califFinalSnap.data() : {};
@@ -95,7 +103,7 @@ class CalificacionFinal extends Component {
         return {
           id: estudiante.id,
           promedioTareas: promedioTareas,
-          notaTeoria: datosGuardados.nota_teoria ?? '',
+          promedioExamenes: promedioExamenes, // Nuevo dato
           notaPractica: datosGuardados.nota_practica ?? '',
           notaAsistencia: datosGuardados.nota_asistencia ?? '',
           isSaved: califFinalSnap.exists()
@@ -120,6 +128,8 @@ class CalificacionFinal extends Component {
     }
   }
 
+
+
   handleNotaChange = (estudianteId, campo, valor) => {
     const numValor = valor === '' ? '' : Math.max(0, Math.min(100, Number(valor)));
     this.setState(prevState => ({
@@ -133,14 +143,15 @@ class CalificacionFinal extends Component {
     }));
   }
   
+  // SE MODIFICA calcularNotaFinal PARA USAR EL PROMEDIO DE EXÁMENES ---
   calcularNotaFinal = (estudianteId) => {
     const notas = this.state.calificaciones[estudianteId];
     if (!notas) return 0;
     const pondTareas = (notas.promedioTareas || 0) * 0.05;
-    const pondTeoria = (notas.notaTeoria || 0) * 0.40;
+    const pondExamenes = (notas.promedioExamenes || 0) * 0.40; // Reemplaza a Teoría
     const pondPractica = (notas.notaPractica || 0) * 0.50;
     const pondAsistencia = (notas.notaAsistencia || 0) * 0.05;
-    const final = pondTareas + pondTeoria + pondPractica + pondAsistencia;
+    const final = pondTareas + pondExamenes + pondPractica + pondAsistencia;
     return final.toFixed(2);
   }
 
@@ -160,7 +171,7 @@ class CalificacionFinal extends Component {
                 materia_id: selectedMateriaId,
                 docente_id: currentUser.uid,
                 promedio_tareas: notas.promedioTareas || 0,
-                nota_teoria: notas.notaTeoria || 0,
+                promedio_examenes: notas.promedioExamenes || 0, // Nuevo campo a guardar
                 nota_practica: notas.notaPractica || 0,
                 nota_asistencia: notas.notaAsistencia || 0,
                 nota_final: Number(notaFinal),
@@ -176,7 +187,7 @@ class CalificacionFinal extends Component {
     }
   }
   
-  handleGenerarInforme = () => {
+ handleGenerarInforme = () => {
     const { estudiantes, calificaciones, selectedMateriaId, materiasAsignadas, docenteData } = this.state;
     if (!selectedMateriaId || estudiantes.length === 0) return;
 
@@ -187,19 +198,21 @@ class CalificacionFinal extends Component {
 
     doc.setFontSize(18);
     doc.text("Acta de Calificaciones Finales", 105, 20, { align: 'center' });
-    
     doc.setFontSize(11);
     doc.text(`Facultad: ${materiaActual?.facultad || 'No especificada'}`, 14, 35);
     doc.text(`Materia: ${materiaActual?.nombre || 'N/A'}`, 14, 42);
     doc.text(`Docente: ${docenteNombre}`, 14, 49);
     doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-BO')}`, 196, 49, { align: 'right'});
 
+    // Cambiamos "Exámenes (40%)" por "Teoría (40%)"
     const tableColumn = ["Nro", "Estudiante", "CI", "Tareas (5%)", "Teoría (40%)", "Práctica (50%)", "Asist. (5%)", "Nota Final"];
     const tableRows = [];
 
     estudiantes.forEach((est, index) => {
         const notas = calificaciones[est.id] || {};
         const pondTareas = (notas.promedioTareas || 0) * 0.05;
+        // --- 2. USAMOS EL PROMEDIO DE EXÁMENES PARA LA COLUMNA DE TEORÍA ---
+        const pondExamenes = (notas.promedioExamenes || 0) * 0.40;
         const notaFinal = this.calcularNotaFinal(est.id);
         
         const rowData = [
@@ -207,7 +220,7 @@ class CalificacionFinal extends Component {
             `${est.apellido_paterno} ${est.apellido_materno}, ${est.nombre}`,
             est.carnet_identidad,
             pondTareas.toFixed(2),
-            notas.notaTeoria || 0,
+            pondExamenes.toFixed(2), // <-- Dato que corresponde a la columna Teoría
             notas.notaPractica || 0,
             notas.notaAsistencia || 0,
             { content: notaFinal, styles: { fontStyle: 'bold' } }
@@ -215,11 +228,14 @@ class CalificacionFinal extends Component {
         tableRows.push(rowData);
     });
 
-autoTable(doc, {head: [tableColumn], // Los encabezados van dentro de un array
-  body: tableRows,
-  startY: 60
-});
+    // Generar la tabla (sin cambios)
+    autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 60,
+    });
     
+    // Pie de página y firma (sin cambios)
     const finalY = doc.lastAutoTable.finalY || 100;
     doc.setFontSize(11);
     doc.text("______________________", 105, finalY + 30, { align: 'center'});
@@ -271,8 +287,8 @@ autoTable(doc, {head: [tableColumn], // Los encabezados van dentro de un array
                         <tr>
                           <th>Estudiante</th>
                           <th>Tareas (5%)</th>
-                          <th>Teoría (40%)</th>
-                          <th>Práctica (50%)</th>
+                          <th>Examen Teoría (40%)</th>
+                          <th>Examen Práctico (50%)</th>
                           <th>Asistencia (5%)</th>
                           <th>Nota Final</th>
                         </tr>
@@ -286,7 +302,8 @@ autoTable(doc, {head: [tableColumn], // Los encabezados van dentro de un array
                             <tr key={est.id}>
                               <td>{`${est.nombre} ${est.apellido_paterno}`}</td>
                               <td className="text-center">{(notas.promedioTareas * 0.05).toFixed(2)}</td>
-                              <td><input type="number" className="form-control form-control-sm text-center" value={notas.notaTeoria} onChange={e => this.handleNotaChange(est.id, 'notaTeoria', e.target.value)} disabled={isDisabled}/></td>
+                               {/* --- SE MODIFICA LA CELDA CORRESPONDIENTE --- */}
+                              <td className="text-center">{(notas.promedioExamenes * 0.40).toFixed(2)}</td>
                               <td><input type="number" className="form-control form-control-sm text-center" value={notas.notaPractica} onChange={e => this.handleNotaChange(est.id, 'notaPractica', e.target.value)} disabled={isDisabled}/></td>
                               <td><input type="number" className="form-control form-control-sm text-center" value={notas.notaAsistencia} onChange={e => this.handleNotaChange(est.id, 'notaAsistencia', e.target.value)} disabled={isDisabled}/></td>
                               <td className="text-center fw-bold">{notaFinal}</td>

@@ -206,6 +206,8 @@ class SistemaAcademico extends Component {
     }
   }
 
+
+  // MÉTODO PARA CALCULAR EL PROMEDIO DE TAREAS ---
   calcularPromedio = (tareas) => {
     const notasValidas = tareas.map(t => t.calificacion).filter(n => n !== '' && !isNaN(n));
     if (notasValidas.length === 0) return 'N/A';
@@ -213,7 +215,16 @@ class SistemaAcademico extends Component {
     return (sum / notasValidas.length).toFixed(2);
   }
 
-  render() {
+   // MÉTODO PARA CALCULAR EL PROMEDIO DE EXÁMENES ---
+  // Es idéntico al anterior, pero opera sobre el array de exámenes
+  calcularPromedioExamenes = (examenes) => {
+    const notasValidas = examenes.map(ex => ex.calificacion).filter(n => n !== '' && !isNaN(n));
+    if (notasValidas.length === 0) return 'N/A';
+    const sum = notasValidas.reduce((acc, nota) => acc + Number(nota), 0);
+    return (sum / notasValidas.length).toFixed(2);
+  }
+
+   render() {
     const { materiasAsignadas, estudiantesConActividades, selectedMateriaId, loadingMaterias, loadingDetalles, mensaje, error, notasTareasOriginales, notasExamenesOriginales, activeTab, isSaving } = this.state;
     
     return (
@@ -248,16 +259,20 @@ class SistemaAcademico extends Component {
             {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             
-            {selectedMateriaId && (
+         {selectedMateriaId && (
               loadingDetalles ? <div className="text-center p-4"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div></div> :
               <div className="lista-calificaciones mt-4">
                 {estudiantesConActividades.map(estudiante => {
                   const tabActual = activeTab[estudiante.id] || 'tareas';
                   return (
                   <div key={estudiante.id} className="card shadow-sm mb-4">
-                    <div className="card-header d-flex justify-content-between align-items-center">
-                      <h5 className="mb-0">{`${estudiante.nombre} ${estudiante.apellido_paterno}`}</h5>
-                      <span className="fw-bold">Promedio Tareas: {this.calcularPromedio(estudiante.tareasAsignadas)}</span>
+                    <div className="card-header d-flex justify-content-between align-items-center flex-wrap">
+                      <h5 className="mb-0 me-3">{`${estudiante.nombre} ${estudiante.apellido_paterno}`}</h5>
+                      {/* --- 2. MOSTRAMOS AMBOS PROMEDIOS --- */}
+                      <div className="d-flex gap-3">
+                        <span className="fw-bold">Prom. Tareas: {this.calcularPromedio(estudiante.tareasAsignadas)}</span>
+                        <span className="fw-bold text-primary">Prom. Exámenes: {this.calcularPromedioExamenes(estudiante.examenesAsignados)}</span>
+                      </div>
                     </div>
                     <div className="card-body">
                       <ul className="nav nav-tabs nav-fill mb-3">
@@ -311,6 +326,7 @@ class SistemaAcademico extends Component {
     );
   }
 }
+
 
 function SistemaAcademicoConRouter(props) {
     return (
